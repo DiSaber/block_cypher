@@ -1,9 +1,25 @@
-use base64::{engine::general_purpose, Engine as _};
+mod data_container;
+mod encryption_handler;
+mod program_data;
+
+use encryption_handler::{from_encrypted, to_encrypted};
 use oqs::*;
+use program_data::ProgramData;
 use std::io::{self, Write};
 
 fn main() {
-    let mut buffer = String::new();
+    let program_data = ProgramData::new(&String::from("hello"));
+    let encrypted = to_encrypted(&program_data, &program_data.hashed_password).unwrap();
+    println!("{}", encrypted);
+    let decrypted: ProgramData = from_encrypted(&encrypted, &program_data.hashed_password).unwrap();
+    println!(
+        "{}",
+        program_data.hashed_password == decrypted.hashed_password
+    );
+}
+
+/*
+let mut buffer = String::new();
     print!("s or r: ");
 
     io::stdout().flush().unwrap();
@@ -53,4 +69,4 @@ fn main() {
             general_purpose::STANDARD_NO_PAD.encode(shared_secret)
         );
     }
-}
+ */
