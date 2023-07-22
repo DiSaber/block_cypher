@@ -5,12 +5,13 @@ use aes_gcm_siv::{
 use base64::{engine::general_purpose, Engine as _};
 use rand;
 use serde::{Deserialize, Serialize};
+use sha3::{Digest, Sha3_256};
 
 use crate::data_container::DataContainer;
 
-pub const RECOMMENDED_HASH_ITERATIONS: i32 = 10000;
+const RECOMMENDED_HASH_ITERATIONS: i32 = 10000;
 
-pub fn from_encrypted<T>(cipher_text: &String, password: &[u8; 32]) -> Result<T, String>
+pub fn from_encrypted<T>(cipher_text: &str, password: &[u8; 32]) -> Result<T, String>
 where
     T: for<'a> Deserialize<'a>,
 {
@@ -33,7 +34,7 @@ where
     };
 
     match serde_json::from_slice::<T>(&plaintext) {
-        Ok(program_data) => Ok(program_data),
+        Ok(data) => Ok(data),
         Err(_) => Err(String::from("Failed to decode the data json")),
     }
 }
@@ -42,8 +43,8 @@ pub fn to_encrypted<T>(data: &T, password: &[u8; 32]) -> Result<String, String>
 where
     T: Serialize,
 {
-    let program_data = match serde_json::to_string::<T>(data) {
-        Ok(program_data) => program_data,
+    let data = match serde_json::to_string::<T>(data) {
+        Ok(data) => data,
         Err(_) => return Err(String::from("Failed to encode the data json")),
     };
 
@@ -51,7 +52,7 @@ where
     let nonce_array: [u8; 12] = rand::random();
     let nonce = Nonce::from_slice(&nonce_array);
 
-    let ciphertext = match cipher.encrypt(nonce, program_data.as_bytes()) {
+    let ciphertext = match cipher.encrypt(nonce, data.as_bytes()) {
         Ok(ciphertext) => ciphertext,
         Err(_) => return Err(String::from("Failed to encrypt the data json")),
     };
@@ -65,4 +66,14 @@ where
     };
 
     Ok(general_purpose::STANDARD_NO_PAD.encode(data_container))
+}
+
+pub fn hash_password(password: &str) -> [u8; 32] {
+    let mut hashed_password = Sha3_256::digest(password);
+
+    for _ in 0..(RECOMMENDED_HASH_ITERATIONS - 1) {
+        hashed_password = Sha3_256::digest(hashed_password);
+    }
+
+    hashed_password.as_slice().try_into().unwrap()
 }

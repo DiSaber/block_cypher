@@ -1,23 +1,35 @@
 use serde::{Deserialize, Serialize};
-use sha3::{Digest, Sha3_256};
 
-use crate::encryption_handler::RECOMMENDED_HASH_ITERATIONS;
+use crate::contact::Contact;
 
 #[derive(Serialize, Deserialize)]
 pub struct ProgramData {
     pub hashed_password: [u8; 32],
+    pub contacts: Vec<Contact>,
 }
 
 impl ProgramData {
-    pub fn new(password: &String) -> Self {
-        let mut hashed_password = Sha3_256::digest(password);
-
-        for _ in 0..(RECOMMENDED_HASH_ITERATIONS - 1) {
-            hashed_password = Sha3_256::digest(hashed_password);
-        }
-
+    pub fn new(password: &[u8; 32]) -> Self {
         ProgramData {
-            hashed_password: hashed_password.as_slice().try_into().unwrap(),
+            hashed_password: *password,
+            contacts: Vec::new(),
         }
+    }
+
+    pub fn format_contacts(&self) -> String {
+        let formatted_contacts: String = self
+            .contacts
+            .iter()
+            .enumerate()
+            .map(|(i, contact)| {
+                if i < self.contacts.len() - 1 {
+                    contact.contact_name.clone() + ", "
+                } else {
+                    contact.contact_name.clone()
+                }
+            })
+            .collect();
+
+        String::from("[") + &formatted_contacts + "]"
     }
 }

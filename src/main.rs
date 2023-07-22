@@ -1,72 +1,72 @@
+mod contact;
 mod data_container;
 mod encryption_handler;
 mod program_data;
+mod screens;
+mod utils;
 
-use encryption_handler::{from_encrypted, to_encrypted};
-use oqs::*;
+use directories::ProjectDirs;
+use encryption_handler::{from_encrypted, hash_password};
 use program_data::ProgramData;
-use std::io::{self, Write};
+
+use console::{Key, Term};
+use std::{fs, path::Path};
+
+use utils::{save_config, VERSION_CODE};
 
 fn main() {
-    let program_data = ProgramData::new(&String::from("hello"));
-    let encrypted = to_encrypted(&program_data, &program_data.hashed_password).unwrap();
-    println!("{}", encrypted);
-    let decrypted: ProgramData = from_encrypted(&encrypted, &program_data.hashed_password).unwrap();
-    println!(
-        "{}",
-        program_data.hashed_password == decrypted.hashed_password
-    );
-}
+    let term = Term::stdout();
+    term.clear_screen().unwrap();
 
-/*
-let mut buffer = String::new();
-    print!("s or r: ");
+    let data_path = ProjectDirs::from("com", "DiSaber", "BlockCypher").unwrap();
+    let data_path: &Path = data_path.config_dir();
+    let data_file = data_path.join("block_cypher.dat");
 
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut buffer).unwrap();
+    let data_file_contents = fs::read_to_string(&data_file).unwrap_or_default();
 
-    if buffer.trim_end() == "s" {
-        let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
-        let (public_key, secret_key) = kyber.keypair().unwrap();
+    let mut program_data = if data_file_contents.trim().is_empty() {
+        let password = hash_password(screens::auth::setup(&term).trim());
+        let program_data = ProgramData::new(&password);
 
-        println!("{}", general_purpose::STANDARD_NO_PAD.encode(public_key));
-
-        let mut buffer = String::new();
-        print!("Cipher Text: ");
-
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut buffer).unwrap();
-
-        let cipher_text = general_purpose::STANDARD_NO_PAD
-            .decode(buffer.trim_end())
-            .unwrap();
-
-        let cipher_text = kyber.ciphertext_from_bytes(cipher_text.as_slice()).unwrap();
-        let shared_secret = kyber.decapsulate(&secret_key, &cipher_text).unwrap();
-
-        println!(
-            "Shared Secret: {}",
-            general_purpose::STANDARD_NO_PAD.encode(shared_secret)
-        );
+        save_config(&program_data, &password);
+        program_data
     } else {
-        let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
+        loop {
+            let password = hash_password(screens::auth::returning(&term).trim());
 
-        let mut buffer = String::new();
-        print!("Public Key: ");
+            if let Ok(program_data) = from_encrypted::<ProgramData>(&data_file_contents, &password)
+            {
+                break program_data;
+            }
 
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut buffer).unwrap();
+            term.clear_screen().unwrap();
+            println!("Invalid password!")
+        }
+    };
 
-        let public_key = general_purpose::STANDARD_NO_PAD
-            .decode(buffer.trim_end())
-            .unwrap();
-        let public_key = kyber.public_key_from_bytes(public_key.as_slice()).unwrap();
-
-        let (cipher_text, shared_secret) = kyber.encapsulate(public_key).unwrap();
+    loop {
+        term.clear_screen().unwrap();
         println!(
-            "Cipher Text: {}\n\nShared Secret: {}",
-            general_purpose::STANDARD_NO_PAD.encode(cipher_text),
-            general_purpose::STANDARD_NO_PAD.encode(shared_secret)
+            "BlockCypher {VERSION_CODE}
+
+            \rPress the 'e' key to encrypt a message
+            \rPress the 'd' key to decrypt a recieved message
+            \rPress the 'c' key to enter the contacts menu
+
+            \rPress the escape key to terminate your session"
         );
+
+        let key = term.read_key().unwrap_or(Key::Alt);
+
+        match key {
+            Key::Char('e') => screens::cipher::encrypt(&term, &program_data),
+            Key::Char('d') => screens::cipher::decrypt(&term, &program_data),
+            Key::Char('c') => screens::contacts::contacts(&term, &mut program_data),
+            Key::Escape => {
+                term.clear_screen().unwrap();
+                return;
+            }
+            _ => (),
+        };
     }
- */
+}
