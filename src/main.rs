@@ -16,7 +16,6 @@ use utils::{save_config, VERSION_CODE};
 
 fn main() {
     let term = Term::stdout();
-    term.clear_screen().unwrap();
 
     let data_path = ProjectDirs::from("com", "DiSaber", "BlockCypher").unwrap();
     let data_path: &Path = data_path.config_dir();
