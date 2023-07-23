@@ -2,37 +2,40 @@ use base64::{engine::general_purpose, Engine};
 use oqs::*;
 use std::io::{self, Write};
 
-use console::{Key, Term};
+use arboard::Clipboard;
+use console::{style, Key, Term};
 
 use crate::{contact::Contact, program_data::ProgramData, utils::save_config};
 
-pub fn contacts(term: &Term, program_data: &mut ProgramData) {
+pub fn contacts(term: &Term, clipboard: &mut Clipboard, program_data: &mut ProgramData) {
     loop {
         term.clear_screen().unwrap();
         println!(
             "{}
             \r{} {}
 
-            \rPress the 'a' key to add a contact
-            \rPress the 'e' key to edit an existing contact
+            \rPress the {} key to add a contact
+            \rPress the {} key to edit an existing contact
 
-            \rPress the escape key to return to the main menu",
+            \rPress the {} key to return to the main menu",
             program_data.format_contacts(),
             program_data.contacts.len(),
             if program_data.contacts.len() == 1 {
                 "contact"
             } else {
                 "contacts"
-            }
+            },
+            style("'a'").cyan(),
+            style("'e'").cyan(),
+            style("escape").red()
         );
 
-        let key = term.read_key().unwrap_or(Key::Alt);
+        let key = term.read_key().unwrap_or(Key::Unknown);
 
         match key {
-            Key::Char('a') => key_exchange(term, program_data),
+            Key::Char('a') => key_exchange(term, clipboard, program_data),
             Key::Char('e') => edit_contact(term, program_data),
             Key::Escape => {
-                term.clear_screen().unwrap();
                 return;
             }
             _ => (),
@@ -40,7 +43,7 @@ pub fn contacts(term: &Term, program_data: &mut ProgramData) {
     }
 }
 
-fn key_exchange(term: &Term, program_data: &mut ProgramData) {
+fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut ProgramData) {
     term.clear_screen().unwrap();
 
     loop {
@@ -77,18 +80,24 @@ fn key_exchange(term: &Term, program_data: &mut ProgramData) {
         }
 
         println!(
-            "\nPress the 's' key to start a key exchange
-            \rPress the 'r' key to enter a receiving key
+            "\nPress the {} key to start a key exchange
+            \rPress the {} key to enter a receiving key
 
-            \rPress the escape key to exit"
+            \rPress the {} key to exit",
+            style("'s'").cyan(),
+            style("'r'").cyan(),
+            style("escape").red()
         );
 
-        let key = term.read_key().unwrap_or(Key::Alt);
+        let key = term.read_key().unwrap_or(Key::Unknown);
 
         match key {
             Key::Char('s') => {
                 let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
                 let (public_key, secret_key) = kyber.keypair().unwrap();
+                let encoded_public_key = general_purpose::STANDARD_NO_PAD.encode(public_key);
+
+                let _ = clipboard.set_text(&encoded_public_key);
 
                 println!(
                     "
@@ -96,9 +105,13 @@ fn key_exchange(term: &Term, program_data: &mut ProgramData) {
                     \r{}
                     \r------------------------------------------
                     
+                    \r{}
                     \rSend this receiving key to the other user and enter the cipher text they send back to you
+                    
                     ", 
-                    general_purpose::STANDARD_NO_PAD.encode(public_key));
+                    encoded_public_key,
+                    style("(The receiving key has been copied to your clipboard)").green()
+                );
 
                 print!("Cipher Text: ");
 
@@ -151,16 +164,22 @@ fn key_exchange(term: &Term, program_data: &mut ProgramData) {
                 let public_key = kyber.public_key_from_bytes(public_key.as_slice()).unwrap();
 
                 let (cipher_text, shared_secret) = kyber.encapsulate(public_key).unwrap();
+                let encoded_cipher_text = general_purpose::STANDARD_NO_PAD.encode(cipher_text);
+
+                let _ = clipboard.set_text(&encoded_cipher_text);
+
                 println!(
                     "
                     \r------------------------------------------
                     \r{}
                     \r------------------------------------------
                     
+                    \r{}
                     \rSend this cipher text back to the other user
 
                     \rPress enter to save the contact when ready...",
-                    general_purpose::STANDARD_NO_PAD.encode(cipher_text)
+                    encoded_cipher_text,
+                    style("(The cipher text has been copied to your clipboard)").green()
                 );
 
                 let _ = term.read_line().unwrap_or_default();
@@ -223,13 +242,16 @@ fn edit_contact(term: &Term, program_data: &mut ProgramData) {
         };
 
         println!(
-            "\nPress the 'e' key to edit the contact's name
-            \rPress the 'd' key to delete the contact
+            "\nPress the {} key to edit the contact's name
+            \rPress the {} key to delete the contact
 
-            \rPress the escape key to exit\n"
+            \rPress the {} key to exit\n",
+            style("'e'").cyan(),
+            style("'d'").cyan(),
+            style("escape").red()
         );
 
-        let key = term.read_key().unwrap_or(Key::Alt);
+        let key = term.read_key().unwrap_or(Key::Unknown);
 
         match key {
             Key::Char('e') => {

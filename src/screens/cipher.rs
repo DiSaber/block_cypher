@@ -1,13 +1,14 @@
 use std::io::{self, Write};
 
-use console::Term;
+use arboard::Clipboard;
+use console::{style, Term};
 
 use crate::{
     encryption_handler::{from_encrypted, to_encrypted},
     program_data::ProgramData,
 };
 
-pub fn encrypt(term: &Term, program_data: &ProgramData) {
+pub fn encrypt(term: &Term, clipboard: &mut Clipboard, program_data: &ProgramData) {
     term.clear_screen().unwrap();
 
     loop {
@@ -60,14 +61,18 @@ pub fn encrypt(term: &Term, program_data: &ProgramData) {
             }
         };
 
+        let _ = clipboard.set_text(&message);
+
         print!(
             "
             \r------------------------------------------
             \r{}
             \r------------------------------------------
 
+            \r{}
             \rSend the encrypted message to your contact and press enter to exit when ready...",
-            message
+            message,
+            style("(The message has been copied to your clipboard)").green()
         );
         io::stdout().flush().unwrap();
 

@@ -11,42 +11,33 @@ use crate::data_container::DataContainer;
 
 const RECOMMENDED_HASH_ITERATIONS: i32 = 10000;
 
-pub fn from_encrypted<T>(cipher_text: &str, password: &[u8; 32]) -> Result<T, String>
+pub fn from_encrypted<T>(
+    cipher_text: &str,
+    password: &[u8; 32],
+) -> Result<T, Box<dyn std::error::Error>>
 where
     T: for<'a> Deserialize<'a>,
 {
-    let data_container = match general_purpose::STANDARD_NO_PAD.decode(cipher_text.trim_end()) {
-        Ok(data_container) => data_container,
-        Err(_) => return Err(String::from("Failed to decode the base64 text")),
-    };
+    let data_container = general_purpose::STANDARD_NO_PAD.decode(cipher_text.trim_end())?;
 
-    let data_container = match serde_json::from_slice::<DataContainer>(&data_container) {
-        Ok(data_container) => data_container,
-        Err(_) => return Err(String::from("Failed to decode data container json")),
-    };
+    let data_container = serde_json::from_slice::<DataContainer>(&data_container)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce = Nonce::from_slice(&data_container.nonce);
 
     let plaintext = match cipher.decrypt(nonce, data_container.data.as_slice()) {
         Ok(plaintext) => plaintext,
-        Err(_) => return Err(String::from("Failed to decrypt the cipher text")),
+        Err(_) => Err("Failed to decrypt")?,
     };
 
-    match serde_json::from_slice::<T>(&plaintext) {
-        Ok(data) => Ok(data),
-        Err(_) => Err(String::from("Failed to decode the data json")),
-    }
+    Ok(serde_json::from_slice::<T>(&plaintext)?)
 }
 
-pub fn to_encrypted<T>(data: &T, password: &[u8; 32]) -> Result<String, String>
+pub fn to_encrypted<T>(data: &T, password: &[u8; 32]) -> Result<String, Box<dyn std::error::Error>>
 where
     T: Serialize,
 {
-    let data = match serde_json::to_string::<T>(data) {
-        Ok(data) => data,
-        Err(_) => return Err(String::from("Failed to encode the data json")),
-    };
+    let data = serde_json::to_string::<T>(data)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce_array: [u8; 12] = rand::random();
@@ -54,16 +45,13 @@ where
 
     let ciphertext = match cipher.encrypt(nonce, data.as_bytes()) {
         Ok(ciphertext) => ciphertext,
-        Err(_) => return Err(String::from("Failed to encrypt the data json")),
+        Err(_) => Err("Failed to encrypt")?,
     };
 
-    let data_container = match serde_json::to_string::<DataContainer>(&DataContainer {
+    let data_container = serde_json::to_string::<DataContainer>(&DataContainer {
         data: ciphertext,
         nonce: nonce_array,
-    }) {
-        Ok(data_container) => data_container,
-        Err(_) => return Err(String::from("Failed to encode the data container json")),
-    };
+    })?;
 
     Ok(general_purpose::STANDARD_NO_PAD.encode(data_container))
 }
