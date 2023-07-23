@@ -1,6 +1,6 @@
 # Block Cypher
 ## Installation 
-To install the program just download the latest release from [here](https://github.com/DiSaber/block_cypher/releases/latest). You can place it anywhere but you should consider placing it on your desktop or creating a shortcut for your own convinience. Once you have set your password you can go through the quantum resistant key exchange process with someone to send encrypted messages.
+To install the program, open the latest release from [here](https://github.com/DiSaber/block_cypher/releases/latest) and download the `block_cypher.exe` file. You can place it anywhere but you should consider placing it on your desktop or creating a shortcut for your own convinience. Once you have set your password you can go through the quantum resistant key exchange process with someone to send encrypted messages.
 ## Best practices
 I highly suggest you write down or otherwise store your password in a secure location as there is no way to recover it. If you want certain messages you recieve to be safe from deletion, you may want to store the encrypted copy somewhere on your device.
 ## Resetting Password
