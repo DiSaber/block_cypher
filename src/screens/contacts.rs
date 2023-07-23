@@ -75,7 +75,7 @@ fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut Progr
             .any(|contact| contact.contact_name == contact_name)
         {
             term.clear_screen().unwrap();
-            println!("Contact already exists!");
+            println!("{}", style("Contact already exists!").red());
             continue;
         }
 
@@ -122,7 +122,7 @@ fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut Progr
                     Ok(cipher_text) => cipher_text,
                     Err(_) => {
                         term.clear_screen().unwrap();
-                        println!("Invalid cipher text!");
+                        println!("{}", style("Invalid cipher text!").red());
                         continue;
                     }
                 };
@@ -131,7 +131,7 @@ fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut Progr
                     Some(cipher_text) => cipher_text,
                     None => {
                         term.clear_screen().unwrap();
-                        println!("Invalid cipher text!");
+                        println!("{}", style("Invalid cipher text!").red());
                         continue;
                     }
                 };
@@ -157,7 +157,7 @@ fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut Progr
                     Ok(public_key) => public_key,
                     Err(_) => {
                         term.clear_screen().unwrap();
-                        println!("Invalid receiving key!");
+                        println!("{}", style("Invalid receiving key!").red());
                         continue;
                     }
                 };
@@ -195,7 +195,7 @@ fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut Progr
             Key::Escape => return,
             _ => {
                 term.clear_screen().unwrap();
-                println!("Invalid option!");
+                println!("{}", style("Invalid option!").red());
                 continue;
             }
         };
@@ -236,7 +236,7 @@ fn edit_contact(term: &Term, program_data: &mut ProgramData) {
             Some(contact_index) => contact_index,
             None => {
                 term.clear_screen().unwrap();
-                println!("Could not find the contact!");
+                println!("{}", style("Could not find the contact!").red());
                 continue;
             }
         };
@@ -264,7 +264,7 @@ fn edit_contact(term: &Term, program_data: &mut ProgramData) {
 
                 if contact_name.is_empty() {
                     term.clear_screen().unwrap();
-                    println!("Contact name cannot be empty!");
+                    println!("{}", style("Contact name cannot be empty!").red());
                     continue;
                 }
 
@@ -279,7 +279,7 @@ fn edit_contact(term: &Term, program_data: &mut ProgramData) {
             Key::Escape => return,
             _ => {
                 term.clear_screen().unwrap();
-                println!("Invalid option!");
+                println!("{}", style("Invalid option!").red());
                 continue;
             }
         };

@@ -42,7 +42,7 @@ pub fn encrypt(term: &Term, clipboard: &mut Clipboard, program_data: &ProgramDat
             Some(contact) => contact,
             None => {
                 term.clear_screen().unwrap();
-                println!("Could not find the contact!");
+                println!("{}", style("Could not find the contact!").red());
                 continue;
             }
         };
@@ -56,7 +56,7 @@ pub fn encrypt(term: &Term, clipboard: &mut Clipboard, program_data: &ProgramDat
             Ok(message) => message,
             Err(_) => {
                 term.clear_screen().unwrap();
-                println!("Failed to encrypt the message!");
+                println!("{}", style("Failed to encrypt the message!").red());
                 continue;
             }
         };
@@ -115,7 +115,7 @@ pub fn decrypt(term: &Term, program_data: &ProgramData) {
         }
 
         term.clear_screen().unwrap();
-        println!("Failed to decrypt the message!");
+        println!("{}", style("Failed to decrypt the message!").red());
         continue;
     }
 }

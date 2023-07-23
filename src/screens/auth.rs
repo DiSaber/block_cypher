@@ -5,7 +5,7 @@ use crate::{
 };
 use std::io::{self, Write};
 
-use console::Term;
+use console::{style, Term};
 
 pub fn setup(term: &Term) -> ProgramData {
     loop {
@@ -36,7 +36,7 @@ pub fn setup(term: &Term) -> ProgramData {
         }
 
         term.clear_screen().unwrap();
-        println!("Passwords don't match!")
+        println!("{}", style("Passwords don't match!").red())
     }
 }
 
@@ -58,7 +58,7 @@ pub fn returning(term: &Term, data_file_contents: &String) -> ProgramData {
         }
 
         term.clear_screen().unwrap();
-        println!("Invalid password!")
+        println!("{}", style("Invalid password!").red())
     }
 }
 
@@ -87,6 +87,6 @@ pub fn change(term: &Term, program_data: &mut ProgramData) {
         }
 
         term.clear_screen().unwrap();
-        println!("Passwords don't match!")
+        println!("{}", style("Passwords don't match!").red())
     }
 }
