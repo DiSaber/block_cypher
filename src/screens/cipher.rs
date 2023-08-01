@@ -1,121 +1,173 @@
-use std::io::{self, Write};
+use std::sync::{Arc, Mutex};
 
 use arboard::Clipboard;
-use console::{style, Term};
+use fltk::{enums::Color, prelude::*, *};
 
 use crate::{
     encryption_handler::{from_encrypted, to_encrypted},
     program_data::ProgramData,
+    screens,
 };
 
-pub fn encrypt(term: &Term, clipboard: &mut Clipboard, program_data: &ProgramData) {
-    term.clear_screen().unwrap();
+pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    main_window.clear();
+    main_window.begin();
 
-    loop {
-        print!(
-            "{}
-            \r{} {}
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
 
-            \rContact name (leave empty to exit): ",
-            program_data.format_contacts(),
-            program_data.contacts.len(),
-            if program_data.contacts.len() == 1 {
+    let mut text_field = input::MultilineInput::default()
+        .with_size(500, 240)
+        .with_pos(150, 60);
+    text_field.set_color(Color::from_hex(0x545454));
+    text_field.set_text_color(Color::White);
+    text_field.set_text_size(16);
+
+    let program_data_unlocked = program_data.lock().unwrap();
+
+    let mut contacts_dropdown = menu::Choice::default()
+        .with_size(120, 30)
+        .with_pos(340, 320);
+    contacts_dropdown.add_choice(&program_data_unlocked.format_contacts());
+
+    let mut contacts_count = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 350)
+        .with_label(&format!(
+            "{} {}",
+            program_data_unlocked.contacts.len(),
+            if program_data_unlocked.contacts.len() == 1 {
                 "contact"
             } else {
                 "contacts"
             }
-        );
-        io::stdout().flush().unwrap();
+        ));
+    contacts_count.set_label_color(Color::White);
+    contacts_count.set_label_size(14);
 
-        let contact_name = term.read_line().unwrap_or_default();
-        let contact_name = contact_name.trim().to_lowercase();
+    let mut encrypt_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 400)
+        .with_label("Copy encrypted text");
+    encrypt_button.set_color(Color::from_hex(0x545454));
+    encrypt_button.set_label_color(Color::White);
+    encrypt_button.set_label_size(16);
 
-        if contact_name.is_empty() {
-            return;
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    encrypt_button.set_callback({
+        let program_data = Arc::clone(&program_data);
+
+        move |_| {
+            if let Some(contact_name) = contacts_dropdown.choice() {
+                let program_data_unlocked = program_data.lock().unwrap();
+                let contact_index = program_data_unlocked
+                    .contacts
+                    .iter()
+                    .position(|contact| contact.contact_name == contact_name)
+                    .unwrap();
+
+                let message = to_encrypted(
+                    &text_field.value().trim().to_owned(),
+                    &program_data_unlocked.contacts[contact_index].contact_key,
+                )
+                .unwrap();
+
+                let mut clipboard = Clipboard::new().unwrap();
+                let _ = clipboard.set_text(&message);
+            }
         }
-
-        let contact = match program_data
-            .contacts
-            .iter()
-            .find(|contact| contact.contact_name == contact_name)
-        {
-            Some(contact) => contact,
-            None => {
-                term.clear_screen().unwrap();
-                println!("{}", style("Could not find the contact!").red());
-                continue;
-            }
-        };
-
-        print!("Message to encrypt: ");
-        io::stdout().flush().unwrap();
-
-        let message = term.read_line().unwrap_or_default();
-
-        let message = match to_encrypted(&message.trim().to_owned(), &contact.contact_key) {
-            Ok(message) => message,
-            Err(_) => {
-                term.clear_screen().unwrap();
-                println!("{}", style("Failed to encrypt the message!").red());
-                continue;
-            }
-        };
-
-        let _ = clipboard.set_text(&message);
-
-        print!(
-            "
-            \r------------------------------------------
-            \r{}
-            \r------------------------------------------
-
-            \r{}
-            \rSend the encrypted message to your contact and press enter to exit when ready...",
-            message,
-            style("(The message has been copied to your clipboard)").green()
-        );
-        io::stdout().flush().unwrap();
-
-        let _ = term.read_line().unwrap_or_default();
-        return;
-    }
+    });
 }
 
-pub fn decrypt(term: &Term, program_data: &ProgramData) {
-    term.clear_screen().unwrap();
+pub fn decrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    main_window.clear();
+    main_window.begin();
 
-    loop {
-        print!("Encrypted message (leave empty to exit): ");
-        io::stdout().flush().unwrap();
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
 
-        let message = term.read_line().unwrap_or_default();
-        let message = message.trim().to_owned();
+    let mut encrypted_text_field = input::Input::default().with_size(300, 24).with_pos(250, 60);
+    encrypted_text_field.set_color(Color::from_hex(0x545454));
+    encrypted_text_field.set_text_color(Color::White);
+    encrypted_text_field.set_text_size(16);
 
-        if message.is_empty() {
-            return;
-        }
+    let mut encrypted_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(50, 60)
+        .with_label("Encrypted Text: ");
+    encrypted_text.set_label_color(Color::White);
+    encrypted_text.set_label_size(14);
 
-        for contact in &program_data.contacts {
-            if let Ok(message) = from_encrypted::<String>(&message, &contact.contact_key) {
-                print!(
-                    "
-                    \rFrom: {}
-                    \r------------------------------------------
-                    \r{}
-                    \r------------------------------------------
+    let mut decrypt_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 100)
+        .with_label("Decrypt text");
+    decrypt_button.set_color(Color::from_hex(0x545454));
+    decrypt_button.set_label_color(Color::White);
+    decrypt_button.set_label_size(16);
 
-                    \rPress enter to exit when ready...",
-                    contact.contact_name, message
-                );
-                io::stdout().flush().unwrap();
+    let mut text_field = input::MultilineInput::default()
+        .with_size(500, 240)
+        .with_pos(150, 146);
+    text_field.set_color(Color::from_hex(0x545454));
+    text_field.set_text_color(Color::White);
+    text_field.set_text_size(16);
+    text_field.set_readonly(true);
 
-                let _ = term.read_line().unwrap_or_default();
-                return;
+    let mut error_label = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 400);
+    error_label.set_label_color(Color::from_hex(0xFF3D3D));
+    error_label.set_label_size(14);
+    error_label.hide();
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    decrypt_button.set_callback({
+        move |_| {
+            let program_data_unlocked = program_data.lock().unwrap();
+
+            for contact in &program_data_unlocked.contacts {
+                if let Ok(message) =
+                    from_encrypted::<String>(&encrypted_text_field.value(), &contact.contact_key)
+                {
+                    text_field.set_value(&format!(
+                        "\nFrom: {}\n------------------------------------------\n{}\n------------------------------------------",
+                        contact.contact_name, message
+                    ));
+                    return;
+                }
             }
-        }
 
-        term.clear_screen().unwrap();
-        println!("{}", style("Failed to decrypt the message!").red());
-        continue;
-    }
+            error_label.set_label("Failed to decrypt!");
+                error_label.show();
+        }
+    });
 }

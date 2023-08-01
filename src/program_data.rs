@@ -17,19 +17,16 @@ impl ProgramData {
     }
 
     pub fn format_contacts(&self) -> String {
-        let formatted_contacts: String = self
-            .contacts
+        self.contacts
             .iter()
             .enumerate()
             .map(|(i, contact)| {
                 if i < self.contacts.len() - 1 {
-                    contact.contact_name.clone() + ", "
+                    contact.contact_name.clone() + "|"
                 } else {
                     contact.contact_name.clone()
                 }
             })
-            .collect();
-
-        String::from("[") + &formatted_contacts + "]"
+            .collect()
     }
 }

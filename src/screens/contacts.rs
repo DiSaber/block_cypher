@@ -1,287 +1,616 @@
+use std::sync::{Arc, Mutex};
+
 use base64::{engine::general_purpose, Engine};
+use fltk::{enums::Color, prelude::*, *};
 use oqs::*;
-use std::io::{self, Write};
 
 use arboard::Clipboard;
-use console::{style, Key, Term};
 
-use crate::{contact::Contact, program_data::ProgramData, utils::save_config};
+use crate::{contact::Contact, program_data::ProgramData, screens, utils::save_config};
 
-pub fn contacts(term: &Term, clipboard: &mut Clipboard, program_data: &mut ProgramData) {
-    loop {
-        term.clear_screen().unwrap();
-        println!(
-            "{}
-            \r{} {}
+pub fn contacts(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    main_window.clear();
+    main_window.begin();
 
-            \rPress the {} key to add a contact
-            \rPress the {} key to edit an existing contact
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
 
-            \rPress the {} key to return to the main menu",
-            program_data.format_contacts(),
-            program_data.contacts.len(),
-            if program_data.contacts.len() == 1 {
+    let program_data_unlocked = program_data.lock().unwrap();
+
+    let mut contacts_dropdown = menu::Choice::default()
+        .with_size(120, 30)
+        .with_pos(340, 142);
+    contacts_dropdown.add_choice(&program_data_unlocked.format_contacts());
+
+    let mut contacts_count = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 172)
+        .with_label(&format!(
+            "{} {}",
+            program_data_unlocked.contacts.len(),
+            if program_data_unlocked.contacts.len() == 1 {
                 "contact"
             } else {
                 "contacts"
-            },
-            style("'a'").cyan(),
-            style("'e'").cyan(),
-            style("escape").red()
-        );
-
-        let key = term.read_key().unwrap_or(Key::Unknown);
-
-        match key {
-            Key::Char('a') => key_exchange(term, clipboard, program_data),
-            Key::Char('e') => edit_contact(term, program_data),
-            Key::Escape => {
-                return;
             }
-            _ => (),
-        };
-    }
+        ));
+    contacts_count.set_label_color(Color::White);
+    contacts_count.set_label_size(14);
+
+    let mut edit_contact_button = button::Button::default()
+        .with_size(100, 20)
+        .with_pos(490, 147)
+        .with_label("Edit Contact");
+    edit_contact_button.set_color(Color::from_hex(0x545454));
+    edit_contact_button.set_label_color(Color::White);
+    edit_contact_button.set_label_size(12);
+
+    let mut add_contact_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 290)
+        .with_label("Add Contact");
+    add_contact_button.set_color(Color::from_hex(0x545454));
+    add_contact_button.set_label_color(Color::White);
+    add_contact_button.set_label_size(16);
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    edit_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+        let contacts_dropdown = contacts_dropdown.clone();
+
+        move |_| {
+            if let Some(contact_name) = contacts_dropdown.choice() {
+                edit_contact(
+                    main_window.clone(),
+                    Arc::clone(&program_data),
+                    &contact_name,
+                )
+            }
+        }
+    });
+
+    add_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| key_exchange_menu(main_window.clone(), Arc::clone(&program_data))
+    });
 }
 
-fn key_exchange(term: &Term, clipboard: &mut Clipboard, program_data: &mut ProgramData) {
-    term.clear_screen().unwrap();
+fn edit_contact(
+    mut main_window: window::Window,
+    program_data: Arc<Mutex<ProgramData>>,
+    contact_name: &str,
+) {
+    let program_data_unlocked = program_data.lock().unwrap();
+    let contact_index = program_data_unlocked
+        .contacts
+        .iter()
+        .position(|contact| contact.contact_name == contact_name)
+        .unwrap();
 
-    loop {
-        print!(
-            "{}
-            \r{} {}
+    main_window.clear();
+    main_window.begin();
 
-            \rNew contact name (leave empty to exit): ",
-            program_data.format_contacts(),
-            program_data.contacts.len(),
-            if program_data.contacts.len() == 1 {
-                "contact"
-            } else {
-                "contacts"
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
+
+    let mut contact_name_field = input::Input::default()
+        .with_size(200, 24)
+        .with_pos(300, 150);
+    contact_name_field.set_color(Color::from_hex(0x545454));
+    contact_name_field.set_text_color(Color::White);
+    contact_name_field.set_text_size(16);
+    contact_name_field.set_value(contact_name);
+
+    let mut contact_name_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(100, 150)
+        .with_label("Contact Name: ");
+    contact_name_text.set_label_color(Color::White);
+    contact_name_text.set_label_size(14);
+
+    let mut save_contact_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 200)
+        .with_label("Save Contact");
+    save_contact_button.set_color(Color::from_hex(0x545454));
+    save_contact_button.set_label_color(Color::White);
+    save_contact_button.set_label_size(16);
+
+    let mut error_label = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 235);
+    error_label.set_label_color(Color::from_hex(0xFF3D3D));
+    error_label.set_label_size(14);
+    error_label.hide();
+
+    let mut delete_contact_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 300)
+        .with_label("Delete Contact");
+    delete_contact_button.set_color(Color::from_hex(0x545454));
+    delete_contact_button.set_label_color(Color::White);
+    delete_contact_button.set_label_size(16);
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| contacts(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    save_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let contact_name_field = contact_name_field.clone();
+        let mut error_label = error_label.clone();
+        let program_data = Arc::clone(&program_data);
+        let contact_name = contact_name.to_string();
+        let contact_index = contact_index.clone();
+
+        move |_| {
+            let contact_name_from_field = contact_name_field.value();
+            let contact_name_from_field = contact_name_from_field.trim();
+
+            if contact_name_from_field.is_empty() {
+                error_label.set_label("Contact name cannot be empty!");
+                error_label.show();
+                return;
             }
-        );
-        io::stdout().flush().unwrap();
 
-        let contact_name = term.read_line().unwrap_or_default();
-        let contact_name = contact_name.trim().to_lowercase();
+            {
+                let mut program_data_unlocked = program_data.lock().unwrap();
 
-        if contact_name.is_empty() {
-            return;
-        }
+                if program_data_unlocked.contacts.iter().any(|contact| {
+                    contact.contact_name == contact_name_from_field
+                        && contact.contact_name != contact_name
+                }) {
+                    error_label.set_label("Contact already exists!");
+                    error_label.show();
+                    return;
+                }
 
-        if program_data
-            .contacts
-            .iter()
-            .any(|contact| contact.contact_name == contact_name)
-        {
-            term.clear_screen().unwrap();
-            println!("{}", style("Contact already exists!").red());
-            continue;
-        }
+                program_data_unlocked.contacts[contact_index].contact_name =
+                    contact_name_from_field.to_string();
 
-        println!(
-            "\nPress the {} key to start a key exchange
-            \rPress the {} key to enter a receiving key
-
-            \rPress the {} key to exit",
-            style("'s'").cyan(),
-            style("'r'").cyan(),
-            style("escape").red()
-        );
-
-        let key = term.read_key().unwrap_or(Key::Unknown);
-
-        match key {
-            Key::Char('s') => {
-                let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
-                let (public_key, secret_key) = kyber.keypair().unwrap();
-                let encoded_public_key = general_purpose::STANDARD_NO_PAD.encode(public_key);
-
-                let _ = clipboard.set_text(&encoded_public_key);
-
-                println!(
-                    "
-                    \r------------------------------------------
-                    \r{}
-                    \r------------------------------------------
-                    
-                    \r{}
-                    \rSend this receiving key to the other user and enter the cipher text they send back to you
-                    
-                    ", 
-                    encoded_public_key,
-                    style("(The receiving key has been copied to your clipboard)").green()
+                save_config(
+                    &program_data_unlocked,
+                    &program_data_unlocked.hashed_password,
                 );
+            }
 
-                print!("Cipher Text: ");
+            contacts(main_window.clone(), Arc::clone(&program_data));
+        }
+    });
 
-                io::stdout().flush().unwrap();
-                let buffer = term.read_line().unwrap_or_default();
+    delete_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+        let contact_index = contact_index.clone();
 
-                let cipher_text = match general_purpose::STANDARD_NO_PAD.decode(buffer.trim_end()) {
+        move |_| {
+            {
+                let mut program_data_unlocked = program_data.lock().unwrap();
+
+                program_data_unlocked.contacts.remove(contact_index);
+
+                save_config(
+                    &program_data_unlocked,
+                    &program_data_unlocked.hashed_password,
+                );
+            }
+
+            contacts(main_window.clone(), Arc::clone(&program_data));
+        }
+    });
+}
+
+fn key_exchange_menu(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    main_window.clear();
+    main_window.begin();
+
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
+
+    let mut start_key_exchange_button = button::Button::default()
+        .with_size(175, 30)
+        .with_pos(312, 207)
+        .with_label("Start key exchange");
+    start_key_exchange_button.set_color(Color::from_hex(0x545454));
+    start_key_exchange_button.set_label_color(Color::White);
+    start_key_exchange_button.set_label_size(16);
+
+    let mut receive_key_button = button::Button::default()
+        .with_size(175, 30)
+        .with_pos(312, 257)
+        .with_label("Enter a receiving key");
+    receive_key_button.set_color(Color::from_hex(0x545454));
+    receive_key_button.set_label_color(Color::White);
+    receive_key_button.set_label_size(16);
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| contacts(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    start_key_exchange_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| start_key_exchange(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    receive_key_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| recieve_key_exchange(main_window.clone(), Arc::clone(&program_data))
+    });
+}
+
+fn recieve_key_exchange(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    main_window.clear();
+    main_window.begin();
+
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
+
+    let mut contact_name_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(100, 150)
+        .with_label("Contact Name: ");
+    contact_name_text.set_label_color(Color::White);
+    contact_name_text.set_label_size(14);
+
+    let mut contact_name_field = input::Input::default()
+        .with_size(200, 24)
+        .with_pos(300, 150);
+    contact_name_field.set_color(Color::from_hex(0x545454));
+    contact_name_field.set_text_color(Color::White);
+    contact_name_field.set_text_size(16);
+
+    let mut recieving_key_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(25, 190)
+        .with_label("Recieving Key: ");
+    recieving_key_text.set_label_color(Color::White);
+    recieving_key_text.set_label_size(14);
+
+    let mut recieving_key_field = input::Input::default()
+        .with_size(350, 24)
+        .with_pos(225, 190);
+    recieving_key_field.set_color(Color::from_hex(0x545454));
+    recieving_key_field.set_text_color(Color::White);
+    recieving_key_field.set_text_size(16);
+
+    let mut copy_cipher_text_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 300)
+        .with_label("Copy Cipher Text");
+    copy_cipher_text_button.set_color(Color::from_hex(0x545454));
+    copy_cipher_text_button.set_label_color(Color::White);
+    copy_cipher_text_button.set_label_size(16);
+
+    let mut description_text = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 230)
+        .with_label("Enter the receiving key above and send the cipher text back");
+    description_text.set_label_color(Color::White);
+    description_text.set_label_size(14);
+
+    let mut add_contact_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 350)
+        .with_label("Add Contact");
+    add_contact_button.set_color(Color::from_hex(0x545454));
+    add_contact_button.set_label_color(Color::White);
+    add_contact_button.set_label_size(16);
+
+    let mut error_label = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 385);
+    error_label.set_label_color(Color::from_hex(0xFF3D3D));
+    error_label.set_label_size(14);
+    error_label.hide();
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| key_exchange_menu(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    let shared_secret: Arc<Mutex<Option<[u8; 32]>>> = Arc::new(Mutex::new(None));
+
+    copy_cipher_text_button.set_callback({
+        let shared_secret = Arc::clone(&shared_secret);
+        let recieving_key_field = recieving_key_field.clone();
+        let mut error_label = error_label.clone();
+
+        move |_| {
+            let public_key =
+                match general_purpose::STANDARD_NO_PAD.decode(recieving_key_field.value().trim()) {
+                    Ok(public_key) => public_key,
+                    Err(_) => {
+                        error_label.set_label("Invalid recieving key!");
+                        error_label.show();
+                        return;
+                    }
+                };
+
+            let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
+            let public_key = match kyber.public_key_from_bytes(public_key.as_slice()) {
+                Some(public_key) => public_key,
+                None => {
+                    error_label.set_label("Invalid cipher text!");
+                    error_label.show();
+                    return;
+                }
+            };
+
+            let (cipher_text, new_shared_secret) = kyber.encapsulate(public_key).unwrap();
+            let encoded_cipher_text = general_purpose::STANDARD_NO_PAD.encode(cipher_text);
+
+            let mut clipboard = Clipboard::new().unwrap();
+            let _ = clipboard.set_text(&encoded_cipher_text);
+
+            *shared_secret.lock().unwrap() =
+                Some(new_shared_secret.into_vec().as_slice().try_into().unwrap());
+        }
+    });
+
+    add_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let contact_name_field = contact_name_field.clone();
+        let program_data = Arc::clone(&program_data);
+        let mut error_label = error_label.clone();
+
+        move |_| {
+            let contact_name = contact_name_field.value();
+            let contact_name = contact_name.trim();
+
+            if contact_name.is_empty() {
+                error_label.set_label("Contact name cannot be empty!");
+                error_label.show();
+                return;
+            }
+
+            {
+                let mut program_data_unlocked = program_data.lock().unwrap();
+
+                if program_data_unlocked
+                    .contacts
+                    .iter()
+                    .any(|contact| contact.contact_name == contact_name)
+                {
+                    error_label.set_label("Contact already exists!");
+                    error_label.show();
+                    return;
+                }
+
+                let shared_secret = match *shared_secret.lock().unwrap() {
+                    Some(shared_secret) => shared_secret,
+                    None => {
+                        error_label.set_label("You must copy the cipher text!");
+                        error_label.show();
+                        return;
+                    }
+                };
+
+                program_data_unlocked.contacts.push(Contact {
+                    contact_name: contact_name.to_string(),
+                    contact_key: shared_secret,
+                });
+
+                save_config(
+                    &program_data_unlocked,
+                    &program_data_unlocked.hashed_password,
+                );
+            }
+
+            contacts(main_window.clone(), Arc::clone(&program_data));
+        }
+    });
+}
+
+fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+    let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
+    let (public_key, secret_key) = kyber.keypair().unwrap();
+    let encoded_public_key = Arc::new(general_purpose::STANDARD_NO_PAD.encode(public_key));
+    let secret_key = Arc::new(secret_key);
+
+    main_window.clear();
+    main_window.begin();
+
+    let mut back_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(20, 20)
+        .with_label("Back");
+    back_button.set_color(Color::from_hex(0x545454));
+    back_button.set_label_color(Color::White);
+    back_button.set_label_size(16);
+
+    let mut contact_name_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(100, 150)
+        .with_label("Contact Name: ");
+    contact_name_text.set_label_color(Color::White);
+    contact_name_text.set_label_size(14);
+
+    let mut contact_name_field = input::Input::default()
+        .with_size(200, 24)
+        .with_pos(300, 150);
+    contact_name_field.set_color(Color::from_hex(0x545454));
+    contact_name_field.set_text_color(Color::White);
+    contact_name_field.set_text_size(16);
+
+    let mut copy_public_key_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 190)
+        .with_label("Copy Receiving Key");
+    copy_public_key_button.set_color(Color::from_hex(0x545454));
+    copy_public_key_button.set_label_color(Color::White);
+    copy_public_key_button.set_label_size(16);
+
+    let mut description_text = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 230)
+        .with_label("Send this receiving key to the other user and enter the cipher text they send back to you");
+    description_text.set_label_color(Color::White);
+    description_text.set_label_size(14);
+
+    let mut cipher_text = frame::Frame::default()
+        .with_size(300, 24)
+        .with_pos(30, 300)
+        .with_label("Cipher Text: ");
+    cipher_text.set_label_color(Color::White);
+    cipher_text.set_label_size(14);
+
+    let mut cipher_text_field = input::Input::default()
+        .with_size(350, 24)
+        .with_pos(225, 300);
+    cipher_text_field.set_color(Color::from_hex(0x545454));
+    cipher_text_field.set_text_color(Color::White);
+    cipher_text_field.set_text_size(16);
+
+    let mut add_contact_button = button::Button::default()
+        .with_size(150, 30)
+        .with_pos(325, 350)
+        .with_label("Add Contact");
+    add_contact_button.set_color(Color::from_hex(0x545454));
+    add_contact_button.set_label_color(Color::White);
+    add_contact_button.set_label_size(16);
+
+    let mut error_label = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 385);
+    error_label.set_label_color(Color::from_hex(0xFF3D3D));
+    error_label.set_label_size(14);
+    error_label.hide();
+
+    main_window.end();
+    main_window.redraw();
+
+    back_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| key_exchange_menu(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    copy_public_key_button.set_callback({
+        let encoded_public_key = encoded_public_key.clone();
+
+        move |_| {
+            let mut clipboard = Clipboard::new().unwrap();
+            let _ = clipboard.set_text(encoded_public_key.as_str());
+        }
+    });
+
+    add_contact_button.set_callback({
+        let main_window = main_window.clone();
+        let contact_name_field = contact_name_field.clone();
+        let program_data = Arc::clone(&program_data);
+        let secret_key = secret_key.clone();
+
+        move |_| {
+            let contact_name = contact_name_field.value();
+            let contact_name = contact_name.trim();
+
+            if contact_name.is_empty() {
+                error_label.set_label("Contact name cannot be empty!");
+                error_label.show();
+                return;
+            }
+
+            {
+                let mut program_data_unlocked = program_data.lock().unwrap();
+
+                if program_data_unlocked
+                    .contacts
+                    .iter()
+                    .any(|contact| contact.contact_name == contact_name)
+                {
+                    error_label.set_label("Contact already exists!");
+                    error_label.show();
+                    return;
+                }
+
+                let cipher_text = match general_purpose::STANDARD_NO_PAD
+                    .decode(cipher_text_field.value().trim().trim_end())
+                {
                     Ok(cipher_text) => cipher_text,
                     Err(_) => {
-                        term.clear_screen().unwrap();
-                        println!("{}", style("Invalid cipher text!").red());
-                        continue;
+                        error_label.set_label("Invalid cipher text!");
+                        error_label.show();
+                        return;
                     }
                 };
 
                 let cipher_text = match kyber.ciphertext_from_bytes(cipher_text.as_slice()) {
                     Some(cipher_text) => cipher_text,
                     None => {
-                        term.clear_screen().unwrap();
-                        println!("{}", style("Invalid cipher text!").red());
-                        continue;
+                        error_label.set_label("Invalid cipher text!");
+                        error_label.show();
+                        return;
                     }
                 };
-                let shared_secret = kyber.decapsulate(&secret_key, &cipher_text).unwrap();
 
-                program_data.contacts.push(Contact {
-                    contact_name,
+                let shared_secret = kyber.decapsulate(&*secret_key, &cipher_text).unwrap();
+
+                program_data_unlocked.contacts.push(Contact {
+                    contact_name: contact_name.to_string(),
                     contact_key: shared_secret.into_vec().as_slice().try_into().unwrap(),
                 });
-                save_config(program_data, &program_data.hashed_password);
 
-                return;
-            }
-            Key::Char('r') => {
-                let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
-
-                print!("\nReceiving key: ");
-
-                io::stdout().flush().unwrap();
-                let buffer = term.read_line().unwrap_or_default();
-
-                let public_key = match general_purpose::STANDARD_NO_PAD.decode(buffer.trim_end()) {
-                    Ok(public_key) => public_key,
-                    Err(_) => {
-                        term.clear_screen().unwrap();
-                        println!("{}", style("Invalid receiving key!").red());
-                        continue;
-                    }
-                };
-                let public_key = kyber.public_key_from_bytes(public_key.as_slice()).unwrap();
-
-                let (cipher_text, shared_secret) = kyber.encapsulate(public_key).unwrap();
-                let encoded_cipher_text = general_purpose::STANDARD_NO_PAD.encode(cipher_text);
-
-                let _ = clipboard.set_text(&encoded_cipher_text);
-
-                println!(
-                    "
-                    \r------------------------------------------
-                    \r{}
-                    \r------------------------------------------
-                    
-                    \r{}
-                    \rSend this cipher text back to the other user
-
-                    \rPress enter to save the contact when ready...",
-                    encoded_cipher_text,
-                    style("(The cipher text has been copied to your clipboard)").green()
+                save_config(
+                    &program_data_unlocked,
+                    &program_data_unlocked.hashed_password,
                 );
-
-                let _ = term.read_line().unwrap_or_default();
-
-                program_data.contacts.push(Contact {
-                    contact_name,
-                    contact_key: shared_secret.into_vec().as_slice().try_into().unwrap(),
-                });
-                save_config(program_data, &program_data.hashed_password);
-
-                return;
             }
-            Key::Escape => return,
-            _ => {
-                term.clear_screen().unwrap();
-                println!("{}", style("Invalid option!").red());
-                continue;
-            }
-        };
-    }
-}
 
-fn edit_contact(term: &Term, program_data: &mut ProgramData) {
-    term.clear_screen().unwrap();
-
-    loop {
-        print!(
-            "{}
-            \r{} {}
-
-            \rContact to edit (leave empty to exit): ",
-            program_data.format_contacts(),
-            program_data.contacts.len(),
-            if program_data.contacts.len() == 1 {
-                "contact"
-            } else {
-                "contacts"
-            }
-        );
-        io::stdout().flush().unwrap();
-
-        let contact_name = term.read_line().unwrap_or_default();
-        let contact_name = contact_name.trim().to_lowercase();
-
-        if contact_name.is_empty() {
-            return;
+            contacts(main_window.clone(), Arc::clone(&program_data));
         }
-
-        let contact_index = match program_data
-            .contacts
-            .iter()
-            .position(|contact| contact.contact_name == contact_name)
-        {
-            Some(contact_index) => contact_index,
-            None => {
-                term.clear_screen().unwrap();
-                println!("{}", style("Could not find the contact!").red());
-                continue;
-            }
-        };
-
-        println!(
-            "\nPress the {} key to edit the contact's name
-            \rPress the {} key to delete the contact
-
-            \rPress the {} key to exit\n",
-            style("'e'").cyan(),
-            style("'d'").cyan(),
-            style("escape").red()
-        );
-
-        let key = term.read_key().unwrap_or(Key::Unknown);
-
-        match key {
-            Key::Char('e') => {
-                print!("Contact name: ");
-                io::stdout().flush().unwrap();
-
-                let contact_name = term
-                    .read_line_initial_text(&contact_name)
-                    .unwrap_or_default();
-
-                if contact_name.is_empty() {
-                    term.clear_screen().unwrap();
-                    println!("{}", style("Contact name cannot be empty!").red());
-                    continue;
-                }
-
-                program_data.contacts[contact_index].contact_name = contact_name;
-                save_config(program_data, &program_data.hashed_password);
-            }
-            Key::Char('d') => {
-                program_data.contacts.remove(contact_index);
-                save_config(program_data, &program_data.hashed_password);
-                return;
-            }
-            Key::Escape => return,
-            _ => {
-                term.clear_screen().unwrap();
-                println!("{}", style("Invalid option!").red());
-                continue;
-            }
-        };
-    }
+    });
 }
