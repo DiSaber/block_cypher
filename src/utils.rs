@@ -13,5 +13,5 @@ pub fn save_config(program_data: &ProgramData, password: &[u8; 32]) {
     if !data_path.exists() {
         fs::create_dir_all(data_path).unwrap();
     }
-    fs::write(&data_file, to_encrypted(program_data, password).unwrap()).unwrap();
+    fs::write(data_file, to_encrypted(program_data, password).unwrap()).unwrap();
 }

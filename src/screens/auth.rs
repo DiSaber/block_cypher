@@ -73,7 +73,7 @@ pub fn setup(mut main_window: window::Window) {
                 return;
             }
 
-            let password = hash_password(&password_field.value().trim());
+            let password = hash_password(password_field.value().trim());
             let program_data = ProgramData::new(&password);
 
             save_config(&program_data, &password);
@@ -134,7 +134,7 @@ pub fn returning(mut main_window: window::Window, data_file_contents: String) {
                 return;
             }
 
-            let password = hash_password(&password_field.value().trim());
+            let password = hash_password(password_field.value().trim());
 
             match from_encrypted::<ProgramData>(&data_file_contents, &password) {
                 Ok(program_data) => screens::menu::main_menu(
@@ -144,7 +144,6 @@ pub fn returning(mut main_window: window::Window, data_file_contents: String) {
                 Err(_) => {
                     error_label.set_label("Invalid password!");
                     error_label.show();
-                    return;
                 }
             }
         }
@@ -232,7 +231,7 @@ pub fn change_password(mut main_window: window::Window, program_data: Arc<Mutex<
                 let mut program_data_unlocked = program_data.lock().unwrap();
 
                 program_data_unlocked.hashed_password =
-                    hash_password(&password_field.value().trim());
+                    hash_password(password_field.value().trim());
 
                 save_config(
                     &program_data_unlocked,

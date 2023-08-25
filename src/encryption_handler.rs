@@ -3,7 +3,6 @@ use aes_gcm_siv::{
     Aes256GcmSiv, Nonce,
 };
 use base64::{engine::general_purpose, Engine as _};
-use rand;
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 

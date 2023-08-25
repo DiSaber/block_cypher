@@ -169,7 +169,7 @@ fn edit_contact(
         let mut error_label = error_label.clone();
         let program_data = Arc::clone(&program_data);
         let contact_name = contact_name.to_string();
-        let contact_index = contact_index.clone();
+        let contact_index = contact_index;
 
         move |_| {
             let contact_name_from_field = contact_name_field.value();
@@ -209,7 +209,7 @@ fn edit_contact(
     delete_contact_button.set_callback({
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
-        let contact_index = contact_index.clone();
+        let contact_index = contact_index;
 
         move |_| {
             {
@@ -597,7 +597,7 @@ fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mutex<P
                     }
                 };
 
-                let shared_secret = kyber.decapsulate(&*secret_key, &cipher_text).unwrap();
+                let shared_secret = kyber.decapsulate(&*secret_key, cipher_text).unwrap();
 
                 program_data_unlocked.contacts.push(Contact {
                     contact_name: contact_name.to_string(),
