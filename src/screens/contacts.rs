@@ -284,7 +284,7 @@ fn key_exchange_menu(mut main_window: window::Window, program_data: Arc<Mutex<Pr
     let mut start_key_exchange_button = button::Button::default()
         .with_size(175, 30)
         .with_pos(312, 207)
-        .with_label("Start key exchange");
+        .with_label("Start Key Exchange");
     start_key_exchange_button.set_color(Color::from_hex(0x545454));
     start_key_exchange_button.set_label_color(Color::White);
     start_key_exchange_button.set_label_size(16);
@@ -292,7 +292,7 @@ fn key_exchange_menu(mut main_window: window::Window, program_data: Arc<Mutex<Pr
     let mut receive_key_button = button::Button::default()
         .with_size(175, 30)
         .with_pos(312, 257)
-        .with_label("Enter a receiving key");
+        .with_label("Enter a Receiving Key");
     receive_key_button.set_color(Color::from_hex(0x545454));
     receive_key_button.set_label_color(Color::White);
     receive_key_button.set_label_size(16);
@@ -424,7 +424,7 @@ fn recieve_key_exchange(mut main_window: window::Window, program_data: Arc<Mutex
             let public_key = match kyber.public_key_from_bytes(public_key.as_slice()) {
                 Some(public_key) => public_key,
                 None => {
-                    error_label.set_label("Invalid cipher text!");
+                    error_label.set_label("Invalid recieving key!");
                     error_label.show();
                     return;
                 }

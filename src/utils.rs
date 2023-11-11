@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 
 use crate::{encryption_handler::to_encrypted, program_data::ProgramData};
 
-pub const VERSION_CODE: &str = "v2.1.0";
+pub const VERSION_CODE: &str = "v2.1.1";
 
 pub fn save_config(program_data: &ProgramData, password: &[u8; 32]) {
     let data_path = ProjectDirs::from("com", "DiSaber", "BlockCypher").unwrap();
