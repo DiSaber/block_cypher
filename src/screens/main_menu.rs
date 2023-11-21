@@ -35,6 +35,6 @@ pub fn main_menu(mut main_window: window::Window, program_data: Arc<Mutex<Progra
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::auth::change_password(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::change_password(main_window.clone(), Arc::clone(&program_data))
     });
 }

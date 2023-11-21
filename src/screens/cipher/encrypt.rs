@@ -16,7 +16,7 @@ pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::main_menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::main_menu(main_window.clone(), Arc::clone(&program_data))
     });
 
     built_encrypt_menu.encrypt_button.set_callback({
