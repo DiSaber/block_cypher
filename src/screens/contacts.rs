@@ -72,7 +72,7 @@ pub fn contacts(mut main_window: window::Window, program_data: Arc<Mutex<Program
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::main_menu::main_menu(main_window.clone(), Arc::clone(&program_data))
     });
 
     contacts_dropdown.set_callback({

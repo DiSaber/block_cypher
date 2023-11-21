@@ -78,7 +78,7 @@ pub fn setup(mut main_window: window::Window) {
 
             save_config(&program_data, &password);
 
-            screens::menu::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)));
+            screens::main_menu::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)));
         }
     });
 }
@@ -137,7 +137,7 @@ pub fn returning(mut main_window: window::Window, data_file_contents: String) {
             let password = hash_password(password_field.value().trim());
 
             match from_encrypted::<ProgramData>(&data_file_contents, &password) {
-                Ok(program_data) => screens::menu::main_menu(
+                Ok(program_data) => screens::main_menu::main_menu(
                     main_window.clone(),
                     Arc::new(Mutex::new(program_data)),
                 ),
@@ -205,7 +205,7 @@ pub fn change_password(mut main_window: window::Window, program_data: Arc<Mutex<
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::main_menu::main_menu(main_window.clone(), Arc::clone(&program_data))
     });
 
     confirm_button.set_callback({
@@ -239,7 +239,7 @@ pub fn change_password(mut main_window: window::Window, program_data: Arc<Mutex<
                 );
             }
 
-            screens::menu::main_menu(main_window.clone(), Arc::clone(&program_data));
+            screens::main_menu::main_menu(main_window.clone(), Arc::clone(&program_data));
         }
     });
 }

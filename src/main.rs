@@ -31,9 +31,9 @@ fn main() {
     main_window.set_color(Color::from_hex(0x252525));
 
     if data_file_contents.trim().is_empty() {
-        screens::auth::setup(main_window.clone())
+        screens::setup(main_window.clone())
     } else {
-        screens::auth::returning(main_window.clone(), data_file_contents)
+        screens::returning(main_window.clone(), data_file_contents)
     };
 
     app.run().unwrap();

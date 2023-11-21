@@ -5,10 +5,10 @@ use crate::screens;
 
 use fltk::{prelude::*, *};
 
-use crate::screens::builders::main_menu;
+use crate::screens::builders;
 
 pub fn main_menu(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
-    let mut built_main_menu = main_menu::build_main_menu(&mut main_window);
+    let mut built_main_menu = builders::build_main_menu(&mut main_window);
 
     built_main_menu.contacts_button.set_callback({
         let main_window = main_window.clone();
@@ -21,14 +21,14 @@ pub fn main_menu(mut main_window: window::Window, program_data: Arc<Mutex<Progra
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::cipher::encrypt(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::encrypt(main_window.clone(), Arc::clone(&program_data))
     });
 
     built_main_menu.decrypt_button.set_callback({
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| screens::cipher::decrypt(main_window.clone(), Arc::clone(&program_data))
+        move |_| screens::decrypt(main_window.clone(), Arc::clone(&program_data))
     });
 
     built_main_menu.change_password_button.set_callback({
