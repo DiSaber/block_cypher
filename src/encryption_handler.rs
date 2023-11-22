@@ -29,14 +29,14 @@ where
         Err(_) => Err("Failed to decrypt")?,
     };
 
-    Ok(serde_json::from_slice::<T>(&plaintext)?)
+    Ok(serde_json::from_slice(&plaintext)?)
 }
 
 pub fn to_encrypted<T>(data: &T, password: &[u8; 32]) -> Result<String, Box<dyn std::error::Error>>
 where
     T: Serialize,
 {
-    let data = serde_json::to_string::<T>(data)?;
+    let data = serde_json::to_string(data)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce_array: [u8; 12] = rand::random();
@@ -47,7 +47,7 @@ where
         Err(_) => Err("Failed to encrypt")?,
     };
 
-    let data_container = serde_json::to_string::<DataContainer>(&DataContainer {
+    let data_container = serde_json::to_string(&DataContainer {
         data: ciphertext,
         nonce: nonce_array,
     })?;

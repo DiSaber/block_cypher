@@ -32,7 +32,7 @@ pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
                     .unwrap();
 
                 let message = to_encrypted(
-                    &built_encrypt_menu.text_field.value().trim().to_owned(),
+                    &built_encrypt_menu.text_field.value(),
                     &program_data_unlocked.contacts[contact_index].contact_key,
                 )
                 .unwrap();

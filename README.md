@@ -9,7 +9,7 @@ In the contacts menu, you can select the other user's name in the dropdown and o
 ### Encryption/Decryption
 You should now be able to encrypt/decrypt messages in their respective menus.
 ## Best practices
-I highly suggest you write down or otherwise store your password in a secure location as there is no way to recover it. If you want certain messages you recieve to be safe from deletion, you may want to store the encrypted copy somewhere on your device.
+I highly suggest you write down or otherwise store your password in a secure location as there is no way to recover it. If you want certain messages you receive to be safe from deletion, you may want to store the encrypted copy somewhere on your device.
 ## Resetting Password
 Unfortunately there is no way to recover your password as AES-256 is irreversible. You can however delete the file titled `block_cypher.dat` in the directory `C:\Users\{username}\AppData\Roaming\DiSaber\BlockCypher\config` to reset the application.
 ## Technical specifications
