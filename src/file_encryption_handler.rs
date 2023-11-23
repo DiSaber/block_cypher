@@ -2,21 +2,14 @@ use aes_gcm_siv::{
     aead::{generic_array::GenericArray, Aead, KeyInit},
     Aes256GcmSiv, Nonce,
 };
-use base64::{engine::general_purpose, Engine as _};
-use serde::{Deserialize, Serialize};
 
-use crate::data_container::DataContainer;
+use crate::{data_container::DataContainer, file_container::FileContainer};
 
-pub fn from_encrypted<T>(
-    cipher_text: &str,
+pub fn from_encrypted(
+    cipher_text: &Vec<u8>,
     password: &[u8; 32],
-) -> Result<T, Box<dyn std::error::Error>>
-where
-    T: for<'a> Deserialize<'a>,
-{
-    let data_container = general_purpose::STANDARD_NO_PAD.decode(cipher_text.trim_end())?;
-
-    let data_container = serde_json::from_slice::<DataContainer>(&data_container)?;
+) -> Result<FileContainer, Box<dyn std::error::Error>> {
+    let data_container = bincode::deserialize::<DataContainer>(&cipher_text)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce = Nonce::from_slice(&data_container.nonce);
@@ -26,28 +19,28 @@ where
         Err(_) => Err("Failed to decrypt")?,
     };
 
-    Ok(serde_json::from_slice(&plaintext)?)
+    Ok(bincode::deserialize(&plaintext)?)
 }
 
 pub fn to_encrypted(
-    file: &Vec<u8>,
+    file: &FileContainer,
     password: &[u8; 32],
-) -> Result<String, Box<dyn std::error::Error>> {
-    let data = serde_json::to_string(file)?;
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let data = bincode::serialize(file)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce_array: [u8; 12] = rand::random();
     let nonce = Nonce::from_slice(&nonce_array);
 
-    let ciphertext = match cipher.encrypt(nonce, data.as_bytes()) {
+    let ciphertext = match cipher.encrypt(nonce, data.as_slice()) {
         Ok(ciphertext) => ciphertext,
         Err(_) => Err("Failed to encrypt")?,
     };
 
-    let data_container = serde_json::to_string(&DataContainer {
+    let data_container = bincode::serialize(&DataContainer {
         data: ciphertext,
         nonce: nonce_array,
     })?;
 
-    Ok(general_purpose::STANDARD_NO_PAD.encode(data_container))
+    Ok(data_container)
 }

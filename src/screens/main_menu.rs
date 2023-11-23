@@ -24,11 +24,25 @@ pub fn main_menu(mut main_window: window::Window, program_data: Arc<Mutex<Progra
         move |_| screens::encrypt(main_window.clone(), Arc::clone(&program_data))
     });
 
+    built_main_menu.encrypt_file_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| screens::encrypt_file(main_window.clone(), Arc::clone(&program_data))
+    });
+
     built_main_menu.decrypt_button.set_callback({
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
         move |_| screens::decrypt(main_window.clone(), Arc::clone(&program_data))
+    });
+
+    built_main_menu.decrypt_file_button.set_callback({
+        let main_window = main_window.clone();
+        let program_data = Arc::clone(&program_data);
+
+        move |_| screens::decrypt_file(main_window.clone(), Arc::clone(&program_data))
     });
 
     built_main_menu.change_password_button.set_callback({
