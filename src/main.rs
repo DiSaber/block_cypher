@@ -15,8 +15,6 @@ use fltk::{enums::Color, prelude::*, *};
 use fltk_theme::{SchemeType, WidgetScheme};
 use std::{fs, path::Path};
 
-use utils::VERSION_CODE;
-
 fn main() {
     let data_path = ProjectDirs::from("com", "DiSaber", "BlockCypher").unwrap();
     let data_path: &Path = data_path.config_dir();
