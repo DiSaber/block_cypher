@@ -3,6 +3,8 @@
 mod contact;
 mod data_container;
 mod encryption_handler;
+mod file_container;
+mod file_encryption_handler;
 mod program_data;
 mod screens;
 mod utils;
