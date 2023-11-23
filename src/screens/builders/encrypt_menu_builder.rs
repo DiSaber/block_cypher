@@ -56,9 +56,9 @@ pub fn build_encrypt_menu(
     contacts_count.set_label_size(14);
 
     let mut encrypt_button = button::Button::default()
-        .with_size(150, 30)
-        .with_pos(325, 400)
-        .with_label("Copy encrypted text");
+        .with_size(180, 30)
+        .with_pos(310, 400)
+        .with_label("Copy Encrypted Text");
     encrypt_button.set_color(Color::from_hex(0x545454));
     encrypt_button.set_label_color(Color::White);
     encrypt_button.set_label_size(16);

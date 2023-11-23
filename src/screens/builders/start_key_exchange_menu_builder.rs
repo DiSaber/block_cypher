@@ -38,8 +38,8 @@ pub fn build_start_key_exchange_menu(
     contact_name_field.set_text_size(16);
 
     let mut copy_public_key_button = button::Button::default()
-        .with_size(150, 30)
-        .with_pos(325, 190)
+        .with_size(180, 30)
+        .with_pos(310, 190)
         .with_label("Copy Receiving Key");
     copy_public_key_button.set_color(Color::from_hex(0x545454));
     copy_public_key_button.set_label_color(Color::White);

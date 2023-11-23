@@ -35,7 +35,7 @@ pub fn build_decrypt_menu(main_window: &mut window::Window) -> BuiltDecryptMenu 
     let mut decrypt_button = button::Button::default()
         .with_size(150, 30)
         .with_pos(325, 100)
-        .with_label("Decrypt text");
+        .with_label("Decrypt Text");
     decrypt_button.set_color(Color::from_hex(0x545454));
     decrypt_button.set_label_color(Color::White);
     decrypt_button.set_label_size(16);
