@@ -6,11 +6,9 @@ use aes_gcm_siv::{
 use crate::{data_container::DataContainer, file_container::FileContainer};
 
 pub fn from_encrypted(
-    cipher_text: &Vec<u8>,
+    data_container: &DataContainer,
     password: &[u8; 32],
 ) -> Result<FileContainer, Box<dyn std::error::Error>> {
-    let data_container = bincode::deserialize::<DataContainer>(&cipher_text)?;
-
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce = Nonce::from_slice(&data_container.nonce);
 
@@ -25,7 +23,7 @@ pub fn from_encrypted(
 pub fn to_encrypted(
     file: &FileContainer,
     password: &[u8; 32],
-) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+) -> Result<DataContainer, Box<dyn std::error::Error>> {
     let data = bincode::serialize(file)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
@@ -37,10 +35,8 @@ pub fn to_encrypted(
         Err(_) => Err("Failed to encrypt")?,
     };
 
-    let data_container = bincode::serialize(&DataContainer {
+    Ok(DataContainer {
         data: ciphertext,
         nonce: nonce_array,
-    })?;
-
-    Ok(data_container)
+    })
 }

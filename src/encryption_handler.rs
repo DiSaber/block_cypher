@@ -2,7 +2,6 @@ use aes_gcm_siv::{
     aead::{generic_array::GenericArray, Aead, KeyInit},
     Aes256GcmSiv, Nonce,
 };
-use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 
@@ -11,16 +10,12 @@ use crate::data_container::DataContainer;
 const RECOMMENDED_HASH_ITERATIONS: i32 = 100000;
 
 pub fn from_encrypted<T>(
-    cipher_text: &str,
+    data_container: &DataContainer,
     password: &[u8; 32],
 ) -> Result<T, Box<dyn std::error::Error>>
 where
     T: for<'a> Deserialize<'a>,
 {
-    let data_container = general_purpose::STANDARD_NO_PAD.decode(cipher_text.trim_end())?;
-
-    let data_container = serde_json::from_slice::<DataContainer>(&data_container)?;
-
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce = Nonce::from_slice(&data_container.nonce);
 
@@ -32,7 +27,10 @@ where
     Ok(serde_json::from_slice(&plaintext)?)
 }
 
-pub fn to_encrypted<T>(data: &T, password: &[u8; 32]) -> Result<String, Box<dyn std::error::Error>>
+pub fn to_encrypted<T>(
+    data: &T,
+    password: &[u8; 32],
+) -> Result<DataContainer, Box<dyn std::error::Error>>
 where
     T: Serialize,
 {
@@ -47,12 +45,10 @@ where
         Err(_) => Err("Failed to encrypt")?,
     };
 
-    let data_container = serde_json::to_string(&DataContainer {
+    Ok(DataContainer {
         data: ciphertext,
         nonce: nonce_array,
-    })?;
-
-    Ok(general_purpose::STANDARD_NO_PAD.encode(data_container))
+    })
 }
 
 pub fn hash_password(password: &str) -> [u8; 32] {

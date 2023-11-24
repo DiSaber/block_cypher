@@ -7,6 +7,7 @@ use std::{
 use fltk::{prelude::*, *};
 
 use crate::{
+    data_container::MessageContainer,
     file_container::FileContainer,
     file_encryption_handler::to_encrypted,
     program_data::ProgramData,
@@ -103,18 +104,21 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                 }
             };
 
-            let encrypted_file = to_encrypted(
-                &FileContainer {
-                    file,
-                    filename: file_path
-                        .file_name()
-                        .unwrap_or_default()
-                        .to_string_lossy()
-                        .to_string(),
-                },
+            let message_container = MessageContainer::new(
+                to_encrypted(
+                    &FileContainer {
+                        file,
+                        filename: file_path
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string(),
+                    },
+                    &program_data_unlocked.contacts[contact_index].contact_key,
+                )
+                .unwrap(),
                 &program_data_unlocked.contacts[contact_index].contact_key,
-            )
-            .unwrap();
+            );
 
             let mut nfc = dialog::NativeFileChooser::new(dialog::FileDialogType::BrowseSaveFile);
             nfc.set_title("Save Encrypted File");
@@ -123,7 +127,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             nfc.show();
             let file_path = nfc.filename();
 
-            match fs::write(&file_path, encrypted_file) {
+            match fs::write(&file_path, message_container.to_binary()) {
                 Ok(_) => (),
                 Err(_) => {
                     built_encrypt_file_menu

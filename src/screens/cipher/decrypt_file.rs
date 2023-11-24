@@ -22,7 +22,7 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
         move |_| {
             let program_data_unlocked = program_data.lock().unwrap();
 
-            for contact in &program_data_unlocked.contacts {
+            /*for contact in &program_data_unlocked.contacts {
                 if let Ok(message) =
                     from_encrypted::<String>(&built_decrypt_menu.encrypted_text_field.value(), &contact.contact_key)
                 {
@@ -32,9 +32,11 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                     ));
                     return;
                 }
-            }
+            }*/
 
-            built_decrypt_menu.error_label.set_label("Failed to decrypt!");
+            built_decrypt_menu
+                .error_label
+                .set_label("Failed to decrypt!");
             built_decrypt_menu.error_label.show();
         }
     });
