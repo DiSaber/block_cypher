@@ -25,7 +25,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
         move |_| screens::main_menu(main_window.clone(), Arc::clone(&program_data))
     });
 
-    let selected_file: Arc<Mutex<Option<PathBuf>>> = Arc::new(Mutex::new(None));
+    let selected_file: Arc<Mutex<PathBuf>> = Arc::new(Mutex::new(PathBuf::default()));
 
     built_encrypt_file_menu.file_input.set_callback({
         let mut selected_file_text = built_encrypt_file_menu.selected_file_text.clone();
@@ -40,7 +40,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             selected_file_text.set_label(&format!("Selected File: {}", file_path.display()));
 
             match selected_file.lock() {
-                Ok(mut selected_file) => *selected_file = Some(file_path),
+                Ok(mut selected_file) => *selected_file = file_path,
                 Err(_) => {
                     error_label.set_label("Failed to load file!");
                     error_label.show()
@@ -50,8 +50,6 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
     });
 
     built_encrypt_file_menu.encrypt_button.set_callback({
-        let program_data = Arc::clone(&program_data);
-
         move |_| {
             let contact_name = match built_encrypt_file_menu.contacts_dropdown.choice() {
                 Some(contact_name) => contact_name,
@@ -82,18 +80,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                 }
             };
 
-            let file_path = match selected_file.clone() {
-                Some(file_path) => file_path,
-                None => {
-                    built_encrypt_file_menu
-                        .error_label
-                        .set_label("Failed to load file!");
-                    built_encrypt_file_menu.error_label.show();
-                    return;
-                }
-            };
-
-            let file = match fs::read(&file_path) {
+            let file = match fs::read(&*selected_file) {
                 Ok(file) => file,
                 Err(_) => {
                     built_encrypt_file_menu
@@ -108,7 +95,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                 to_encrypted(
                     &FileContainer {
                         file,
-                        filename: file_path
+                        filename: selected_file
                             .file_name()
                             .unwrap_or_default()
                             .to_string_lossy()

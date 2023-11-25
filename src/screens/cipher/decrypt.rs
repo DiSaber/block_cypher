@@ -26,7 +26,7 @@ pub fn decrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
             let message_container = match MessageContainer::from_base64(&built_decrypt_menu.encrypted_text_field.value()) {
                 Ok(message_container) => message_container,
                 Err(_) => {
-                    built_decrypt_menu.error_label.set_label("Invalid cipher text!");
+                    built_decrypt_menu.error_label.set_label("Invalid encrypted text!");
                     built_decrypt_menu.error_label.show();
                     return;
                 }
