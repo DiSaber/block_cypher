@@ -114,7 +114,7 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             nfc.show();
             let file_path = nfc.filename();
 
-            match fs::write(&file_path, message_container.to_binary()) {
+            match fs::write(file_path, message_container.to_binary()) {
                 Ok(_) => (),
                 Err(_) => {
                     built_encrypt_file_menu

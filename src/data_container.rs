@@ -14,7 +14,7 @@ impl DataContainer {
         general_purpose::STANDARD_NO_PAD.encode(json)
     }
 
-    pub fn from_base64(data: &String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_base64(data: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let data_container = general_purpose::STANDARD_NO_PAD.decode(data.trim())?;
         Ok(serde_json::from_slice::<Self>(&data_container)?)
     }
@@ -30,7 +30,7 @@ pub struct MessageContainer {
 impl MessageContainer {
     pub fn new(data_container: DataContainer, password: &[u8; 32]) -> Self {
         let message_nonce = rand::random();
-        let user_id = Sha3_256::digest([password.clone(), message_nonce].concat())
+        let user_id = Sha3_256::digest([*password, message_nonce].concat())
             .as_slice()
             .try_into()
             .unwrap();
@@ -42,7 +42,7 @@ impl MessageContainer {
     }
 
     pub fn validate_user_id(&self, password: &[u8; 32]) -> bool {
-        let user_id: [u8; 32] = Sha3_256::digest([password.clone(), self.message_nonce].concat())
+        let user_id: [u8; 32] = Sha3_256::digest([*password, self.message_nonce].concat())
             .as_slice()
             .try_into()
             .unwrap();
@@ -54,7 +54,7 @@ impl MessageContainer {
         general_purpose::STANDARD_NO_PAD.encode(json)
     }
 
-    pub fn from_base64(data: &String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_base64(data: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let data_container = general_purpose::STANDARD_NO_PAD.decode(data.trim())?;
         Ok(serde_json::from_slice::<Self>(&data_container)?)
     }
@@ -63,7 +63,7 @@ impl MessageContainer {
         bincode::serialize(self).unwrap()
     }
 
-    pub fn from_binary(data: &Vec<u8>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_binary(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(bincode::deserialize::<Self>(data)?)
     }
 }

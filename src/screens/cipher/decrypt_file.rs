@@ -103,7 +103,7 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                     nfc.show();
                     let file_path = nfc.filename();
 
-                    match fs::write(&file_path, file_container.file) {
+                    match fs::write(file_path, file_container.file) {
                         Ok(_) => (),
                         Err(_) => {
                             built_decrypt_file_menu

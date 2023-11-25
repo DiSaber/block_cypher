@@ -8,7 +8,7 @@ use arboard::Clipboard;
 
 use crate::{contact::Contact, program_data::ProgramData, screens::builders, utils::save_config};
 
-use super::{contacts, key_exchange};
+use super::{contacts_menu, key_exchange};
 
 pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
     let mut built_start_key_exchange_menu =
@@ -76,8 +76,7 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
                         built_start_key_exchange_menu
                             .cipher_text_field
                             .value()
-                            .trim()
-                            .trim_end(),
+                            .trim(),
                     ) {
                         Ok(cipher_text) => cipher_text,
                         Err(_) => {
@@ -113,7 +112,7 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
                     );
                 }
 
-                contacts(main_window.clone(), Arc::clone(&program_data));
+                contacts_menu(main_window.clone(), Arc::clone(&program_data));
             }
         });
 }

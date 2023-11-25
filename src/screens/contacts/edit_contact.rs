@@ -4,7 +4,7 @@ use fltk::{prelude::*, *};
 
 use crate::{program_data::ProgramData, screens::builders, utils::save_config};
 
-use super::contacts;
+use super::contacts_menu;
 
 pub fn edit_contact(
     mut main_window: window::Window,
@@ -25,7 +25,7 @@ pub fn edit_contact(
         let main_window = main_window.clone();
         let program_data = Arc::clone(&program_data);
 
-        move |_| contacts(main_window.clone(), Arc::clone(&program_data))
+        move |_| contacts_menu(main_window.clone(), Arc::clone(&program_data))
     });
 
     built_edit_contact_menu.save_contact_button.set_callback({
@@ -66,7 +66,7 @@ pub fn edit_contact(
                 );
             }
 
-            contacts(main_window.clone(), Arc::clone(&program_data));
+            contacts_menu(main_window.clone(), Arc::clone(&program_data));
         }
     });
 
@@ -86,7 +86,7 @@ pub fn edit_contact(
                 );
             }
 
-            contacts(main_window.clone(), Arc::clone(&program_data));
+            contacts_menu(main_window.clone(), Arc::clone(&program_data));
         }
     });
 }
