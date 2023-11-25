@@ -4,6 +4,7 @@ use arboard::Clipboard;
 use fltk::{prelude::*, *};
 
 use crate::{
+    data_container::MessageContainer,
     encryption_handler::to_encrypted,
     program_data::ProgramData,
     screens::{self, builders},
@@ -31,14 +32,17 @@ pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
                     .position(|contact| contact.contact_name == contact_name)
                     .unwrap();
 
-                let message = to_encrypted(
-                    &built_encrypt_menu.text_field.value(),
+                let message_container = MessageContainer::new(
+                    to_encrypted(
+                        &built_encrypt_menu.text_field.value(),
+                        &program_data_unlocked.contacts[contact_index].contact_key,
+                    )
+                    .unwrap(),
                     &program_data_unlocked.contacts[contact_index].contact_key,
-                )
-                .unwrap();
+                );
 
                 let mut clipboard = Clipboard::new().unwrap();
-                let _ = clipboard.set_text(&message);
+                let _ = clipboard.set_text(message_container.to_base64());
             }
         }
     });

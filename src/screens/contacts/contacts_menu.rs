@@ -10,7 +10,7 @@ use crate::{
 
 use super::{edit_contact, key_exchange};
 
-pub fn contacts(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
+pub fn contacts_menu(mut main_window: window::Window, program_data: Arc<Mutex<ProgramData>>) {
     let mut built_contacts_menu = builders::build_contacts_menu(&mut main_window, &program_data);
 
     built_contacts_menu.back_button.set_callback({

@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use fltk::{prelude::*, *};
 
 use crate::{
+    data_container::MessageContainer,
     encryption_handler::from_encrypted,
     program_data::ProgramData,
     screens::{self, builders},
@@ -22,14 +23,28 @@ pub fn decrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
         move |_| {
             let program_data_unlocked = program_data.lock().unwrap();
 
+            let message_container = match MessageContainer::from_base64(&built_decrypt_menu.encrypted_text_field.value()) {
+                Ok(message_container) => message_container,
+                Err(_) => {
+                    built_decrypt_menu.error_label.set_label("Invalid encrypted text!");
+                    built_decrypt_menu.error_label.show();
+                    return;
+                }
+            };
+
             for contact in &program_data_unlocked.contacts {
+                if !message_container.validate_user_id(&contact.contact_key) {
+                    continue;
+                }
+
                 if let Ok(message) =
-                    from_encrypted::<String>(&built_decrypt_menu.encrypted_text_field.value(), &contact.contact_key)
+                    from_encrypted::<String>(&message_container.data_container, &contact.contact_key)
                 {
                     built_decrypt_menu.text_field.set_value(&format!(
                         "\nFrom: {}\n------------------------------------------\n{}\n------------------------------------------",
                         contact.contact_name, message
                     ));
+                    built_decrypt_menu.error_label.hide();
                     return;
                 }
             }

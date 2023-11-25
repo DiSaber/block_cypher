@@ -8,7 +8,7 @@ use arboard::Clipboard;
 
 use crate::{contact::Contact, program_data::ProgramData, screens::builders, utils::save_config};
 
-use super::{contacts, key_exchange};
+use super::{contacts_menu, key_exchange};
 
 pub fn receive_key_exchange(
     mut main_window: window::Window,
@@ -117,7 +117,7 @@ pub fn receive_key_exchange(
                     );
                 }
 
-                contacts(main_window.clone(), Arc::clone(&program_data));
+                contacts_menu(main_window.clone(), Arc::clone(&program_data));
             }
         });
 }

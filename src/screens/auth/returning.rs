@@ -1,4 +1,5 @@
 use crate::{
+    data_container::DataContainer,
     encryption_handler::{from_encrypted, hash_password},
     program_data::ProgramData,
     screens::{self, builders},
@@ -23,7 +24,16 @@ pub fn returning(mut main_window: window::Window, data_file_contents: String) {
 
             let password = hash_password(password_field.value().trim());
 
-            match from_encrypted::<ProgramData>(&data_file_contents, &password) {
+            let data_container = match DataContainer::from_base64(&data_file_contents) {
+                Ok(data_container) => data_container,
+                Err(_) => {
+                    error_label.set_label("Could not load the data file!");
+                    error_label.show();
+                    return;
+                }
+            };
+
+            match from_encrypted::<ProgramData>(&data_container, &password) {
                 Ok(program_data) => {
                     screens::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)))
                 }
