@@ -15,7 +15,7 @@ pub fn save_config(program_data: &ProgramData, password: &[u8; 32]) {
     }
     fs::write(
         data_file,
-        to_encrypted(program_data, password).unwrap().to_base64(),
+        to_encrypted(program_data, password).unwrap().to_binary(),
     )
     .unwrap();
 }

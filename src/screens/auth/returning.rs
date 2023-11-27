@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 
 use fltk::{prelude::*, *};
 
-pub fn returning(mut main_window: window::Window, data_file_contents: String) {
+pub fn returning(mut main_window: window::Window, data_container: DataContainer) {
     let mut built_returning_menu = builders::build_returning_menu(&mut main_window);
 
     built_returning_menu.confirm_button.set_callback({
@@ -23,15 +23,6 @@ pub fn returning(mut main_window: window::Window, data_file_contents: String) {
             }
 
             let password = hash_password(password_field.value().trim());
-
-            let data_container = match DataContainer::from_base64(&data_file_contents) {
-                Ok(data_container) => data_container,
-                Err(_) => {
-                    error_label.set_label("Could not load the data file!");
-                    error_label.show();
-                    return;
-                }
-            };
 
             match from_encrypted::<ProgramData>(&data_container, &password) {
                 Ok(program_data) => {

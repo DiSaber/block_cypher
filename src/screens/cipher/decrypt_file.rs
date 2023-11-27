@@ -8,7 +8,8 @@ use fltk::{prelude::*, *};
 
 use crate::{
     data_container::MessageContainer,
-    file_encryption_handler::from_encrypted,
+    encryption_handler::from_encrypted,
+    file_container::FileContainer,
     program_data::ProgramData,
     screens::{self, builders},
 };
@@ -89,9 +90,10 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                     continue;
                 }
 
-                if let Ok(file_container) =
-                    from_encrypted(&message_container.data_container, &contact.contact_key)
-                {
+                if let Ok(file_container) = from_encrypted::<FileContainer>(
+                    &message_container.data_container,
+                    &contact.contact_key,
+                ) {
                     let mut nfc =
                         dialog::NativeFileChooser::new(dialog::FileDialogType::BrowseSaveFile);
                     nfc.set_title("Save Decrypted File");

@@ -24,7 +24,7 @@ where
         Err(_) => Err("Failed to decrypt")?,
     };
 
-    Ok(serde_json::from_slice(&plaintext)?)
+    Ok(bincode::deserialize(&plaintext)?)
 }
 
 pub fn to_encrypted<T>(
@@ -34,13 +34,13 @@ pub fn to_encrypted<T>(
 where
     T: Serialize,
 {
-    let data = serde_json::to_string(data)?;
+    let data = bincode::serialize(data)?;
 
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce_array: [u8; 12] = rand::random();
     let nonce = Nonce::from_slice(&nonce_array);
 
-    let ciphertext = match cipher.encrypt(nonce, data.as_bytes()) {
+    let ciphertext = match cipher.encrypt(nonce, data.as_slice()) {
         Ok(ciphertext) => ciphertext,
         Err(_) => Err("Failed to encrypt")?,
     };

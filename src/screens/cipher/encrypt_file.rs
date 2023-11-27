@@ -8,8 +8,8 @@ use fltk::{prelude::*, *};
 
 use crate::{
     data_container::MessageContainer,
+    encryption_handler::to_encrypted,
     file_container::FileContainer,
-    file_encryption_handler::to_encrypted,
     program_data::ProgramData,
     screens::{self, builders},
 };
