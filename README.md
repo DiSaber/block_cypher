@@ -13,4 +13,4 @@ I highly suggest you write down or otherwise store your password in a secure loc
 ## Resetting Password
 Unfortunately there is no way to recover your password as AES-256 is irreversible. You can however delete the file titled `block_cypher.data` in the directory `C:\Users\{username}\AppData\Roaming\DiSaber\BlockCypher\config` to reset the application.
 ## Technical specifications
-I use Kyber-1024 for the key exchange and AES-256 for data storage and message sharing.
+I use Kyber-1024 for the key exchange and AES-256 for data storage and message/file sharing.
