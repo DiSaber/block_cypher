@@ -7,9 +7,9 @@ use std::{
 use fltk::{prelude::*, *};
 
 use crate::{
-    data_container::MessageContainer,
     encryption_handler::to_encrypted,
     file_container::FileContainer,
+    message_container::MessageContainer,
     program_data::ProgramData,
     screens::{self, builders},
 };

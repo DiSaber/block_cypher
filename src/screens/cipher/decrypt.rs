@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use fltk::{prelude::*, *};
 
 use crate::{
-    data_container::MessageContainer,
     encryption_handler::from_encrypted,
+    message_container::MessageContainer,
     program_data::ProgramData,
     screens::{self, builders},
 };

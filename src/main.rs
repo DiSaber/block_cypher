@@ -4,6 +4,7 @@ mod contact;
 mod data_container;
 mod encryption_handler;
 mod file_container;
+mod message_container;
 mod program_data;
 mod screens;
 mod utils;
