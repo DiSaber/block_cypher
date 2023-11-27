@@ -7,7 +7,7 @@ use sha3::{Digest, Sha3_256};
 
 use crate::data_container::DataContainer;
 
-const RECOMMENDED_HASH_ITERATIONS: i32 = 100000;
+const RECOMMENDED_HASH_ITERATIONS: i32 = 100_000;
 
 pub fn from_encrypted<T>(
     data_container: &DataContainer,
