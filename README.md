@@ -7,7 +7,7 @@ After following the installation instructions above and creating your password, 
 ### Verification
 In the contacts menu, you can select the other user's name in the dropdown and observe the "view key" to the left. You should compare the view keys (preferably in-person) to ensure they are identical. If they don't match, you should redo the key exchange.
 ### Encryption/Decryption
-You should now be able to encrypt/decrypt messages in their respective menus.
+You should now be able to encrypt/decrypt messages and files in their respective menus.
 ## Best practices
 I highly suggest you write down or otherwise store your password in a secure location as there is no way to recover it. If you want certain messages you receive to be safe from deletion, you may want to store the encrypted copy somewhere on your device.
 ## Resetting Password
