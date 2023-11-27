@@ -75,8 +75,7 @@ pub fn receive_key_exchange(
             let mut error_label = built_receive_key_exchange_menu.error_label.clone();
 
             move |_| {
-                let contact_name = contact_name_field.value();
-                let contact_name = contact_name.trim();
+                let contact_name = contact_name_field.value().trim().to_string();
 
                 if contact_name.is_empty() {
                     error_label.set_label("Contact name cannot be empty!");
@@ -85,9 +84,9 @@ pub fn receive_key_exchange(
                 }
 
                 {
-                    let mut program_data_unlocked = program_data.lock().unwrap();
+                    let mut program_data = program_data.lock().unwrap();
 
-                    if program_data_unlocked
+                    if program_data
                         .contacts
                         .iter()
                         .any(|contact| contact.contact_name == contact_name)
@@ -106,15 +105,12 @@ pub fn receive_key_exchange(
                         }
                     };
 
-                    program_data_unlocked.contacts.push(Contact {
-                        contact_name: contact_name.to_string(),
+                    program_data.contacts.push(Contact {
+                        contact_name,
                         contact_key: shared_secret,
                     });
 
-                    save_config(
-                        &program_data_unlocked,
-                        &program_data_unlocked.hashed_password,
-                    );
+                    save_config(&program_data, &program_data.hashed_password);
                 }
 
                 contacts_menu(main_window.clone(), Arc::clone(&program_data));

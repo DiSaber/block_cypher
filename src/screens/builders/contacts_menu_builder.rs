@@ -38,15 +38,15 @@ pub fn build_contacts_menu(
     let mut contacts_dropdown = menu::Choice::default()
         .with_size(120, 30)
         .with_pos(340, 142);
-    contacts_dropdown.add_choice(&program_data_unlocked.format_contacts());
+    contacts_dropdown.add_choice(&program_data_unlocked.format_contacts(false));
 
     let mut contacts_count = frame::Frame::default()
         .with_size(300, 40)
         .with_pos(250, 172)
         .with_label(&format!(
             "{} {}",
-            program_data_unlocked.contacts.len(),
-            if program_data_unlocked.contacts.len() == 1 {
+            program_data_unlocked.contacts.len() - 1,
+            if program_data_unlocked.contacts.len() - 1 == 1 {
                 "contact"
             } else {
                 "contacts"

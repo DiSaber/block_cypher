@@ -46,8 +46,7 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
             let secret_key = secret_key.clone();
 
             move |_| {
-                let contact_name = contact_name_field.value();
-                let contact_name = contact_name.trim();
+                let contact_name = contact_name_field.value().trim().to_string();
 
                 if contact_name.is_empty() {
                     built_start_key_exchange_menu
@@ -58,9 +57,9 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
                 }
 
                 {
-                    let mut program_data_unlocked = program_data.lock().unwrap();
+                    let mut program_data = program_data.lock().unwrap();
 
-                    if program_data_unlocked
+                    if program_data
                         .contacts
                         .iter()
                         .any(|contact| contact.contact_name == contact_name)
@@ -101,15 +100,12 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
 
                     let shared_secret = kyber.decapsulate(&*secret_key, cipher_text).unwrap();
 
-                    program_data_unlocked.contacts.push(Contact {
-                        contact_name: contact_name.to_string(),
+                    program_data.contacts.push(Contact {
+                        contact_name,
                         contact_key: shared_secret.into_vec().as_slice().try_into().unwrap(),
                     });
 
-                    save_config(
-                        &program_data_unlocked,
-                        &program_data_unlocked.hashed_password,
-                    );
+                    save_config(&program_data, &program_data.hashed_password);
                 }
 
                 contacts_menu(main_window.clone(), Arc::clone(&program_data));
