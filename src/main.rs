@@ -19,7 +19,7 @@ use std::{fs, path::Path};
 fn main() {
     let data_path = ProjectDirs::from("com", "DiSaber", "BlockCypher").unwrap();
     let data_path: &Path = data_path.config_dir();
-    let data_file = data_path.join("block_cypher.dat");
+    let data_file = data_path.join("block_cypher.data");
     let data_file_contents = fs::read(data_file).unwrap_or_default();
 
     let app = app::App::default();

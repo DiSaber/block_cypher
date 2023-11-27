@@ -11,6 +11,6 @@ You should now be able to encrypt/decrypt messages and files in their respective
 ## Best practices
 I highly suggest you write down or otherwise store your password in a secure location as there is no way to recover it. If you want certain messages you receive to be safe from deletion, you may want to store the encrypted copy somewhere on your device.
 ## Resetting Password
-Unfortunately there is no way to recover your password as AES-256 is irreversible. You can however delete the file titled `block_cypher.dat` in the directory `C:\Users\{username}\AppData\Roaming\DiSaber\BlockCypher\config` to reset the application.
+Unfortunately there is no way to recover your password as AES-256 is irreversible. You can however delete the file titled `block_cypher.data` in the directory `C:\Users\{username}\AppData\Roaming\DiSaber\BlockCypher\config` to reset the application.
 ## Technical specifications
 I use Kyber-1024 for the key exchange and AES-256 for data storage and message sharing.
