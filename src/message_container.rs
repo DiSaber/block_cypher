@@ -34,13 +34,12 @@ impl MessageContainer {
     }
 
     pub fn to_base64(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        general_purpose::STANDARD_NO_PAD.encode(json)
+        general_purpose::STANDARD_NO_PAD.encode(self.to_binary())
     }
 
     pub fn from_base64(data: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let data_container = general_purpose::STANDARD_NO_PAD.decode(data.trim())?;
-        Ok(serde_json::from_slice::<Self>(&data_container)?)
+        Ok(Self::from_binary(&data_container)?)
     }
 
     pub fn to_binary(&self) -> Vec<u8> {
