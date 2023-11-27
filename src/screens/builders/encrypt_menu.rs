@@ -9,6 +9,7 @@ pub struct BuiltEncryptMenu {
     pub encrypt_button: button::Button,
     pub contacts_dropdown: menu::Choice,
     pub text_field: input::MultilineInput,
+    pub error_label: frame::Frame,
 }
 
 pub fn build_encrypt_menu(
@@ -63,6 +64,13 @@ pub fn build_encrypt_menu(
     encrypt_button.set_label_color(Color::White);
     encrypt_button.set_label_size(16);
 
+    let mut error_label = frame::Frame::default()
+        .with_size(300, 40)
+        .with_pos(250, 430);
+    error_label.set_label_color(Color::from_hex(0xFF3D3D));
+    error_label.set_label_size(14);
+    error_label.hide();
+
     main_window.end();
     main_window.redraw();
 
@@ -71,5 +79,6 @@ pub fn build_encrypt_menu(
         encrypt_button,
         contacts_dropdown,
         text_field,
+        error_label,
     }
 }

@@ -24,26 +24,37 @@ pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
         let program_data = Arc::clone(&program_data);
 
         move |_| {
-            if let Some(contact_name) = built_encrypt_menu.contacts_dropdown.choice() {
-                let program_data_unlocked = program_data.lock().unwrap();
-                let contact_index = program_data_unlocked
-                    .contacts
-                    .iter()
-                    .position(|contact| contact.contact_name == contact_name)
-                    .unwrap();
+            let contact_name = match built_encrypt_menu.contacts_dropdown.choice() {
+                Some(contact_name) => contact_name,
+                None => {
+                    built_encrypt_menu
+                        .error_label
+                        .set_label("No contact selected!");
+                    built_encrypt_menu.error_label.show();
+                    return;
+                }
+            };
 
-                let message_container = MessageContainer::new(
-                    to_encrypted(
-                        &built_encrypt_menu.text_field.value(),
-                        &program_data_unlocked.contacts[contact_index].contact_key,
-                    )
-                    .unwrap(),
+            let program_data_unlocked = program_data.lock().unwrap();
+            let contact_index = program_data_unlocked
+                .contacts
+                .iter()
+                .position(|contact| contact.contact_name == contact_name)
+                .unwrap();
+
+            let message_container = MessageContainer::new(
+                to_encrypted(
+                    &built_encrypt_menu.text_field.value(),
                     &program_data_unlocked.contacts[contact_index].contact_key,
-                );
+                )
+                .unwrap(),
+                &program_data_unlocked.contacts[contact_index].contact_key,
+            );
 
-                let mut clipboard = Clipboard::new().unwrap();
-                let _ = clipboard.set_text(message_container.to_base64());
-            }
+            let mut clipboard = Clipboard::new().unwrap();
+            let _ = clipboard.set_text(message_container.to_base64());
+
+            built_encrypt_menu.error_label.hide();
         }
     });
 }
