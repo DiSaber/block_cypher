@@ -7,7 +7,6 @@ mod file_container;
 mod message_container;
 mod program_data;
 mod screens;
-mod utils;
 
 use data_container::DataContainer;
 use directories::ProjectDirs;

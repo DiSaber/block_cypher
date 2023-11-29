@@ -2,7 +2,6 @@ use crate::{
     encryption_handler::hash_password,
     program_data::ProgramData,
     screens::{self, builders},
-    utils::save_config,
 };
 use std::sync::{Arc, Mutex};
 
@@ -43,10 +42,7 @@ pub fn change_password(mut main_window: window::Window, program_data: Arc<Mutex<
                 program_data_unlocked.hashed_password =
                     hash_password(password_field.value().trim());
 
-                save_config(
-                    &program_data_unlocked,
-                    &program_data_unlocked.hashed_password,
-                );
+                program_data_unlocked.save_config();
             }
 
             screens::main_menu(main_window.clone(), Arc::clone(&program_data));

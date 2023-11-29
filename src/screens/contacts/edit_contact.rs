@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use fltk::{prelude::*, *};
 
-use crate::{program_data::ProgramData, screens::builders, utils::save_config};
+use crate::{program_data::ProgramData, screens::builders};
 
 use super::contacts_menu;
 
@@ -60,10 +60,7 @@ pub fn edit_contact(
                 program_data_unlocked.contacts[contact_index].contact_name =
                     contact_name_from_field.to_string();
 
-                save_config(
-                    &program_data_unlocked,
-                    &program_data_unlocked.hashed_password,
-                );
+                program_data_unlocked.save_config();
             }
 
             contacts_menu(main_window.clone(), Arc::clone(&program_data));
@@ -80,10 +77,7 @@ pub fn edit_contact(
 
                 program_data_unlocked.contacts.remove(contact_index);
 
-                save_config(
-                    &program_data_unlocked,
-                    &program_data_unlocked.hashed_password,
-                );
+                program_data_unlocked.save_config();
             }
 
             contacts_menu(main_window.clone(), Arc::clone(&program_data));

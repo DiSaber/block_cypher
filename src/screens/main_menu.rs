@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 
 use crate::screens;
-use crate::utils::save_config;
 use crate::{contact::Contact, program_data::ProgramData};
 
 use fltk::{prelude::*, *};
@@ -24,7 +23,7 @@ pub fn main_menu(mut main_window: window::Window, program_data: Arc<Mutex<Progra
                 contact_key: rand::random(),
             });
 
-            save_config(&program_data, &program_data.hashed_password)
+            program_data.save_config();
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::utils::VERSION_CODE;
+use crate::program_data::VERSION_CODE;
 
 use fltk::{enums::Color, prelude::*, *};
 

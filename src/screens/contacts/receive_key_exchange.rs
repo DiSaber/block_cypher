@@ -6,7 +6,7 @@ use oqs::*;
 
 use arboard::Clipboard;
 
-use crate::{contact::Contact, program_data::ProgramData, screens::builders, utils::save_config};
+use crate::{contact::Contact, program_data::ProgramData, screens::builders};
 
 use super::{contacts_menu, key_exchange};
 
@@ -110,7 +110,7 @@ pub fn receive_key_exchange(
                         contact_key: shared_secret,
                     });
 
-                    save_config(&program_data, &program_data.hashed_password);
+                    program_data.save_config();
                 }
 
                 contacts_menu(main_window.clone(), Arc::clone(&program_data));

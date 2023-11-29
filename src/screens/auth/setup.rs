@@ -2,7 +2,6 @@ use crate::{
     encryption_handler::hash_password,
     program_data::ProgramData,
     screens::{self, builders},
-    utils::save_config,
 };
 use std::sync::{Arc, Mutex};
 
@@ -32,7 +31,7 @@ pub fn setup(mut main_window: window::Window) {
             let password = hash_password(password_field.value().trim());
             let program_data = ProgramData::new(&password);
 
-            save_config(&program_data, &password);
+            program_data.save_config();
 
             screens::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)));
         }
