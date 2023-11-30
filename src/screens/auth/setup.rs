@@ -1,5 +1,4 @@
 use crate::{
-    encryption_handler::hash_password,
     program_data::ProgramData,
     screens::{self, builders},
 };
@@ -28,8 +27,7 @@ pub fn setup(mut main_window: window::Window) {
                 return;
             }
 
-            let password = hash_password(password_field.value().trim());
-            let program_data = ProgramData::new(&password);
+            let program_data = ProgramData::new(password_field.value().trim());
 
             program_data.save_config();
 

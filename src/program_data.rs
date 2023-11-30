@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{contact::Contact, encryption_handler::to_encrypted};
+use crate::{
+    contact::Contact, encryption_handler::hash_password, encryption_handler::to_encrypted,
+};
 use directories::ProjectDirs;
 use std::{fs, path::Path};
 
@@ -8,16 +10,20 @@ pub const VERSION_CODE: &str = "v3.2.0";
 
 #[derive(Serialize, Deserialize)]
 pub struct ProgramData {
-    pub hashed_password: [u8; 32],
+    hashed_password: [u8; 32],
     pub contacts: Vec<Contact>,
 }
 
 impl ProgramData {
-    pub fn new(password: &[u8; 32]) -> Self {
+    pub fn new(password: &str) -> Self {
         ProgramData {
-            hashed_password: *password,
+            hashed_password: hash_password(password),
             contacts: Vec::new(),
         }
+    }
+
+    pub fn set_password(&mut self, password: &str) {
+        self.hashed_password = hash_password(password);
     }
 
     pub fn format_contacts(&self, include_built_ins: bool) -> String {

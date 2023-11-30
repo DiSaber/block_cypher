@@ -1,5 +1,4 @@
 use crate::{
-    encryption_handler::hash_password,
     program_data::ProgramData,
     screens::{self, builders},
 };
@@ -39,8 +38,7 @@ pub fn change_password(mut main_window: window::Window, program_data: Arc<Mutex<
             {
                 let mut program_data_unlocked = program_data.lock().unwrap();
 
-                program_data_unlocked.hashed_password =
-                    hash_password(password_field.value().trim());
+                program_data_unlocked.set_password(password_field.value().trim());
 
                 program_data_unlocked.save_config();
             }
