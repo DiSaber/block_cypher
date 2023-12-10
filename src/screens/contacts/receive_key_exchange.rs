@@ -34,25 +34,19 @@ pub fn receive_key_exchange(
             let mut error_label = built_receive_key_exchange_menu.error_label.clone();
 
             move |_| {
-                let public_key = match general_purpose::STANDARD_NO_PAD
-                    .decode(receiving_key_field.value().trim())
-                {
-                    Ok(public_key) => public_key,
-                    Err(_) => {
-                        error_label.set_label("Invalid receiving key!");
-                        error_label.show();
-                        return;
-                    }
+                let Ok(public_key) =
+                    general_purpose::STANDARD_NO_PAD.decode(receiving_key_field.value().trim())
+                else {
+                    error_label.set_label("Invalid receiving key!");
+                    error_label.show();
+                    return;
                 };
 
                 let kyber = kem::Kem::new(kem::Algorithm::Kyber1024).unwrap();
-                let public_key = match kyber.public_key_from_bytes(public_key.as_slice()) {
-                    Some(public_key) => public_key,
-                    None => {
-                        error_label.set_label("Invalid receiving key!");
-                        error_label.show();
-                        return;
-                    }
+                let Some(public_key) = kyber.public_key_from_bytes(public_key.as_slice()) else {
+                    error_label.set_label("Invalid receiving key!");
+                    error_label.show();
+                    return;
                 };
 
                 let (cipher_text, new_shared_secret) = kyber.encapsulate(public_key).unwrap();
@@ -96,13 +90,10 @@ pub fn receive_key_exchange(
                         return;
                     }
 
-                    let shared_secret = match *shared_secret.lock().unwrap() {
-                        Some(shared_secret) => shared_secret,
-                        None => {
-                            error_label.set_label("You must copy the cipher text!");
-                            error_label.show();
-                            return;
-                        }
+                    let Some(shared_secret) = *shared_secret.lock().unwrap() else {
+                        error_label.set_label("You must copy the cipher text!");
+                        error_label.show();
+                        return;
                     };
 
                     program_data.contacts.push(Contact {

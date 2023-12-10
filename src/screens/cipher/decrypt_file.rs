@@ -38,49 +38,39 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             let file_path = nfc.filename();
             selected_file_text.set_label(&format!("Selected File: {}", file_path.display()));
 
-            match selected_file.lock() {
-                Ok(mut selected_file) => *selected_file = file_path,
-                Err(_) => {
-                    error_label.set_label("Failed to load file!");
-                    error_label.show()
-                }
+            if let Ok(mut selected_file) = selected_file.lock() {
+                *selected_file = file_path;
+            } else {
+                error_label.set_label("Failed to load file!");
+                error_label.show();
             }
         }
     });
 
     built_decrypt_file_menu.decrypt_button.set_callback({
         move |_| {
-            let selected_file = match selected_file.lock() {
-                Ok(selected_file) => selected_file,
-                Err(_) => {
-                    built_decrypt_file_menu
-                        .error_label
-                        .set_label("Failed to load file!");
-                    built_decrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Ok(selected_file) = selected_file.lock() else {
+                built_decrypt_file_menu
+                    .error_label
+                    .set_label("Failed to load file!");
+                built_decrypt_file_menu.error_label.show();
+                return;
             };
 
-            let file = match fs::read(&*selected_file) {
-                Ok(file) => file,
-                Err(_) => {
-                    built_decrypt_file_menu
-                        .error_label
-                        .set_label("Failed to load file!");
-                    built_decrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Ok(file) = fs::read(&*selected_file) else {
+                built_decrypt_file_menu
+                    .error_label
+                    .set_label("Failed to load file!");
+                built_decrypt_file_menu.error_label.show();
+                return;
             };
 
-            let message_container = match MessageContainer::from_binary(&file) {
-                Ok(message_container) => message_container,
-                Err(_) => {
-                    built_decrypt_file_menu
-                        .error_label
-                        .set_label("Invalid encrypted file!");
-                    built_decrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Ok(message_container) = MessageContainer::from_binary(&file) else {
+                built_decrypt_file_menu
+                    .error_label
+                    .set_label("Invalid encrypted file!");
+                built_decrypt_file_menu.error_label.show();
+                return;
             };
 
             let program_data_unlocked = program_data.lock().unwrap();
@@ -105,15 +95,12 @@ pub fn decrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                     nfc.show();
                     let file_path = nfc.filename();
 
-                    match fs::write(file_path, file_container.file) {
-                        Ok(_) => (),
-                        Err(_) => {
-                            built_decrypt_file_menu
-                                .error_label
-                                .set_label("Failed to save file!");
-                            built_decrypt_file_menu.error_label.show();
-                            return;
-                        }
+                    if let Err(_) = fs::write(file_path, file_container.file) {
+                        built_decrypt_file_menu
+                            .error_label
+                            .set_label("Failed to save file!");
+                        built_decrypt_file_menu.error_label.show();
+                        return;
                     };
 
                     built_decrypt_file_menu.error_label.hide();

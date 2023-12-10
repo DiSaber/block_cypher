@@ -19,9 +19,8 @@ where
     let cipher = Aes256GcmSiv::new(GenericArray::from_slice(password));
     let nonce = Nonce::from_slice(&data_container.nonce);
 
-    let plaintext = match cipher.decrypt(nonce, data_container.data.as_slice()) {
-        Ok(plaintext) => plaintext,
-        Err(_) => Err("Failed to decrypt")?,
+    let Ok(plaintext) = cipher.decrypt(nonce, data_container.data.as_slice()) else {
+        Err("Failed to decrypt")?
     };
 
     Ok(bincode::deserialize(&plaintext)?)
@@ -40,9 +39,8 @@ where
     let nonce_array: [u8; 12] = rand::random();
     let nonce = Nonce::from_slice(&nonce_array);
 
-    let ciphertext = match cipher.encrypt(nonce, data.as_slice()) {
-        Ok(ciphertext) => ciphertext,
-        Err(_) => Err("Failed to encrypt")?,
+    let Ok(ciphertext) = cipher.encrypt(nonce, data.as_slice()) else {
+        Err("Failed to encrypt")?
     };
 
     Ok(DataContainer {

@@ -71,31 +71,26 @@ pub fn start_key_exchange(mut main_window: window::Window, program_data: Arc<Mut
                         return;
                     }
 
-                    let cipher_text = match general_purpose::STANDARD_NO_PAD.decode(
+                    let Ok(cipher_text) = general_purpose::STANDARD_NO_PAD.decode(
                         built_start_key_exchange_menu
                             .cipher_text_field
                             .value()
                             .trim(),
-                    ) {
-                        Ok(cipher_text) => cipher_text,
-                        Err(_) => {
-                            built_start_key_exchange_menu
-                                .error_label
-                                .set_label("Invalid cipher text!");
-                            built_start_key_exchange_menu.error_label.show();
-                            return;
-                        }
+                    ) else {
+                        built_start_key_exchange_menu
+                            .error_label
+                            .set_label("Invalid cipher text!");
+                        built_start_key_exchange_menu.error_label.show();
+                        return;
                     };
 
-                    let cipher_text = match kyber.ciphertext_from_bytes(cipher_text.as_slice()) {
-                        Some(cipher_text) => cipher_text,
-                        None => {
-                            built_start_key_exchange_menu
-                                .error_label
-                                .set_label("Invalid cipher text!");
-                            built_start_key_exchange_menu.error_label.show();
-                            return;
-                        }
+                    let Some(cipher_text) = kyber.ciphertext_from_bytes(cipher_text.as_slice())
+                    else {
+                        built_start_key_exchange_menu
+                            .error_label
+                            .set_label("Invalid cipher text!");
+                        built_start_key_exchange_menu.error_label.show();
+                        return;
                     };
 
                     let shared_secret = kyber.decapsulate(&*secret_key, cipher_text).unwrap();

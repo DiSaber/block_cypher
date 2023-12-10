@@ -24,15 +24,12 @@ pub fn encrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
         let program_data = Arc::clone(&program_data);
 
         move |_| {
-            let contact_name = match built_encrypt_menu.contacts_dropdown.choice() {
-                Some(contact_name) => contact_name,
-                None => {
-                    built_encrypt_menu
-                        .error_label
-                        .set_label("No contact selected!");
-                    built_encrypt_menu.error_label.show();
-                    return;
-                }
+            let Some(contact_name) = built_encrypt_menu.contacts_dropdown.choice() else {
+                built_encrypt_menu
+                    .error_label
+                    .set_label("No contact selected!");
+                built_encrypt_menu.error_label.show();
+                return;
             };
 
             let program_data_unlocked = program_data.lock().unwrap();

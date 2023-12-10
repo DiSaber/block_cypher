@@ -24,14 +24,11 @@ pub fn returning(mut main_window: window::Window, data_container: DataContainer)
 
             let password = hash_password(password_field.value().trim());
 
-            match from_encrypted::<ProgramData>(&data_container, &password) {
-                Ok(program_data) => {
-                    screens::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)))
-                }
-                Err(_) => {
-                    error_label.set_label("Invalid password!");
-                    error_label.show();
-                }
+            if let Ok(program_data) = from_encrypted::<ProgramData>(&data_container, &password) {
+                screens::main_menu(main_window.clone(), Arc::new(Mutex::new(program_data)));
+            } else {
+                error_label.set_label("Invalid password!");
+                error_label.show();
             }
         }
     });

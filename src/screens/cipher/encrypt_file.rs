@@ -39,27 +39,23 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             let file_path = nfc.filename();
             selected_file_text.set_label(&format!("Selected File: {}", file_path.display()));
 
-            match selected_file.lock() {
-                Ok(mut selected_file) => *selected_file = file_path,
-                Err(_) => {
-                    error_label.set_label("Failed to load file!");
-                    error_label.show()
-                }
+            if let Ok(mut selected_file) = selected_file.lock() {
+                *selected_file = file_path;
+            } else {
+                error_label.set_label("Failed to load file!");
+                error_label.show();
             }
         }
     });
 
     built_encrypt_file_menu.encrypt_button.set_callback({
         move |_| {
-            let contact_name = match built_encrypt_file_menu.contacts_dropdown.choice() {
-                Some(contact_name) => contact_name,
-                None => {
-                    built_encrypt_file_menu
-                        .error_label
-                        .set_label("No contact selected!");
-                    built_encrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Some(contact_name) = built_encrypt_file_menu.contacts_dropdown.choice() else {
+                built_encrypt_file_menu
+                    .error_label
+                    .set_label("No contact selected!");
+                built_encrypt_file_menu.error_label.show();
+                return;
             };
 
             let program_data_unlocked = program_data.lock().unwrap();
@@ -69,26 +65,20 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
                 .position(|contact| contact.contact_name == contact_name)
                 .unwrap();
 
-            let selected_file = match selected_file.lock() {
-                Ok(selected_file) => selected_file,
-                Err(_) => {
-                    built_encrypt_file_menu
-                        .error_label
-                        .set_label("Failed to load file!");
-                    built_encrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Ok(selected_file) = selected_file.lock() else {
+                built_encrypt_file_menu
+                    .error_label
+                    .set_label("Failed to load file!");
+                built_encrypt_file_menu.error_label.show();
+                return;
             };
 
-            let file = match fs::read(&*selected_file) {
-                Ok(file) => file,
-                Err(_) => {
-                    built_encrypt_file_menu
-                        .error_label
-                        .set_label("Failed to load file!");
-                    built_encrypt_file_menu.error_label.show();
-                    return;
-                }
+            let Ok(file) = fs::read(&*selected_file) else {
+                built_encrypt_file_menu
+                    .error_label
+                    .set_label("Failed to load file!");
+                built_encrypt_file_menu.error_label.show();
+                return;
             };
 
             let message_container = MessageContainer::new(
@@ -114,15 +104,12 @@ pub fn encrypt_file(mut main_window: window::Window, program_data: Arc<Mutex<Pro
             nfc.show();
             let file_path = nfc.filename();
 
-            match fs::write(file_path, message_container.to_binary()) {
-                Ok(_) => (),
-                Err(_) => {
-                    built_encrypt_file_menu
-                        .error_label
-                        .set_label("Failed to save file!");
-                    built_encrypt_file_menu.error_label.show();
-                    return;
-                }
+            if let Err(_) = fs::write(file_path, message_container.to_binary()) {
+                built_encrypt_file_menu
+                    .error_label
+                    .set_label("Failed to save file!");
+                built_encrypt_file_menu.error_label.show();
+                return;
             };
 
             built_encrypt_file_menu.error_label.hide();

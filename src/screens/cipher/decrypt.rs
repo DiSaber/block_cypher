@@ -23,13 +23,10 @@ pub fn decrypt(mut main_window: window::Window, program_data: Arc<Mutex<ProgramD
         move |_| {
             let program_data_unlocked = program_data.lock().unwrap();
 
-            let message_container = match MessageContainer::from_base64(&built_decrypt_menu.encrypted_text_field.value()) {
-                Ok(message_container) => message_container,
-                Err(_) => {
+            let Ok(message_container) = MessageContainer::from_base64(&built_decrypt_menu.encrypted_text_field.value()) else {
                     built_decrypt_menu.error_label.set_label("Invalid encrypted text!");
                     built_decrypt_menu.error_label.show();
                     return;
-                }
             };
 
             for contact in &program_data_unlocked.contacts {
